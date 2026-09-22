@@ -1,0 +1,2324 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบการจัดการเรียนรู้รายวิชาชีววิทยา คณะวิทยาศาสตร์ มหาวิทยาลัยราชภัฏอุบลราชธานี</title>
+    
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ================= ธีมชีววิทยา ธรรมชาติ สีสันสดใส ================= */
+        body { 
+            font-family: 'Sarabun', sans-serif; 
+            background-image: url('https://images.unsplash.com/photo-1550081699-7fb2a7392686?q=80&w=1920&auto=format&fit=crop');
+            background-size: cover; background-attachment: fixed; background-position: center;
+            margin: 0; padding: 20px; color: #2c3e50;
+        }
+        
+        .wrapper { max-width: 1300px; margin: 0 auto; position: relative; z-index: 10; }
+
+        /* ================= แอนิเมชันพื้นหลัง ================= */
+        .bg-animations { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .cloud { position: absolute; opacity: 0.7; animation: floatCloud linear infinite; }
+        .leaf { position: absolute; animation: fallLeaf linear infinite; width: 30px; opacity: 0.8; }
+        .balloon { position: absolute; animation: floatBalloon linear infinite; opacity: 0.9; }
+        .bird { position: absolute; animation: flyBird linear infinite; opacity: 0.8; }
+        
+        @keyframes floatCloud { from { transform: translateX(-15vw); } to { transform: translateX(110vw); } }
+        @keyframes fallLeaf { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 0.8; } 100% { transform: translateY(110vh) rotate(360deg); opacity: 0; } }
+        @keyframes floatBalloon { 0% { transform: translateY(110vh) rotate(-5deg); } 100% { transform: translateY(-15vh) rotate(5deg); } }
+        @keyframes flyBird { 0% { transform: translate(-10vw, 30vh) scaleX(-1); } 100% { transform: translate(110vw, -10vh) scaleX(-1); } }
+
+        /* ================= แอนิเมชันไอคอนแจ้งเตือน ================= */
+        @keyframes shakeIcon { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(20deg); } 75% { transform: rotate(-20deg); } }
+        @keyframes bounceIcon { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        @keyframes pulseIcon { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+        @keyframes slideIcon { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
+        
+        .ani-shake { display: inline-block; animation: shakeIcon 1.5s infinite; font-size: 18px; }
+        .ani-bounce { display: inline-block; animation: bounceIcon 1.5s infinite; font-size: 18px; }
+        .ani-pulse { display: inline-block; animation: pulseIcon 1.5s infinite; font-size: 18px; }
+        .ani-slide { display: inline-block; animation: slideIcon 1.5s infinite; font-size: 18px; }
+
+        /* ================= กล่องส่วนหัวเว็บ ================= */
+        .header-box {
+            background: rgba(255, 255, 255, 0.92); padding: 30px 40px; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25); border-top: 10px solid #2ecc71;
+            backdrop-filter: blur(8px); display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 35px;
+        }
+        .logos-wrapper { display: flex; justify-content: center; align-items: center; gap: 25px; margin-bottom: 20px; }
+        .main-logo { height: 110px; width: 110px; object-fit: contain; border-radius: 50%; border: 4px solid #ffffff; box-shadow: 0 5px 12px rgba(0,0,0,0.15); background: white; transition: transform 0.3s ease; }
+        .main-logo:hover { transform: scale(1.05); }
+        .header-text { width: 100%; }
+        .main-title { font-size: 44px; font-weight: 800; color: #2ecc71; margin-bottom: 8px; line-height: 1.3; }
+        .sub-title { font-size: 24px; font-weight: 700; color: #0b5345; }
+        .text-gray { color: #6e6e6e; } .text-pink { color: #e84393; }
+
+        @media (max-width: 900px) {
+            .header-box { padding: 20px; } .logos-wrapper { gap: 15px; margin-bottom: 15px; } .main-logo { height: 85px; width: 85px; }
+            .main-title { font-size: 32px; } .sub-title { font-size: 20px; }
+        }
+
+        /* ================= แยกส่วนเนื้อหาและล็อกอิน ================= */
+        .content-box {
+            background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25); border-top: 10px solid #3498db; backdrop-filter: blur(8px);
+        }
+        .login-box { max-width: 450px; margin: 0 auto; }
+        h2 { color: #2980b9; border-bottom: 3px dashed #3498db; padding-bottom: 8px;} h3 { color: #d35400; }
+        
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #16a085;}
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 2px solid #bdc3c7; border-radius: 8px; box-sizing: border-box; transition: 0.3s; font-family: 'Sarabun'; }
+        .form-group input:focus, .form-group select:focus { border-color: #2ecc71; outline: none; box-shadow: 0 0 8px rgba(46, 204, 113, 0.4); }
+        
+        button { color: white; padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; margin-bottom: 5px; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: 'Sarabun'; }
+        button:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
+        
+        .btn-success { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .btn-primary { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .btn-warning { background: linear-gradient(135deg, #f1c40f, #f39c12); color: #333; }
+        .btn-danger { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .btn-purple { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .btn-orange { background: linear-gradient(135deg, #e67e22, #d35400); }
+        .btn-info { background: linear-gradient(135deg, #34495e, #2c3e50); }
+        
+        .nav-buttons { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center;}
+        .nav-buttons button { flex: 1; min-width: 120px; font-size: 15px; padding: 12px 5px;}
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 15px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+        table, th, td { border: 1px solid #ecf0f1; }
+        th { background-color: #1abc9c; color: white; padding: 12px; text-align: center; }
+        td { padding: 8px; text-align: center; }
+        tr:nth-child(even) { background-color: #f9fbf9; }
+        .table-group-header { background-color: #d1f2eb !important; color: #117864; font-weight: bold; text-align: left; }
+        .table-group-header td { text-align: left; padding: 12px; font-size: 16px; border-left: 5px solid #1abc9c;}
+        .hidden { display: none !important; }
+        
+        /* ================= บัตรนักศึกษา ================= */
+        .room-group { margin-bottom: 30px; }
+        .room-header { background: #e8f8f5; padding: 10px 15px; border-left: 5px solid #2ecc71; color: #27ae60; font-size: 18px; font-weight: bold; border-radius: 5px; margin-top:20px; display: flex; justify-content: space-between; align-items: center; }
+        .student-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 20px; margin-top: 15px; }
+        
+        .student-card { 
+            border: 2px solid #a3e4d7; 
+            border-top: 8px solid #2ecc71;
+            border-radius: 15px; 
+            padding: 20px; 
+            background-color: #ffffff;
+            display: flex; flex-direction: column; gap: 10px; 
+            box-shadow: 0 5px 15px rgba(22, 160, 133, 0.15); 
+            position: relative; transition: 0.3s; overflow: hidden; 
+            -webkit-print-color-adjust: exact !important; 
+            print-color-adjust: exact !important; 
+            color-adjust: exact !important;
+        }
+
+        .student-card-content {
+            display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; position: relative; z-index: 2;
+        }
+
+        .student-card-footer {
+            width: 100%; text-align: center; margin-top: 5px; padding-top: 10px; 
+            border-top: 1px dashed #bdc3c7; color: #16a085; font-size: 13px; font-weight: bold;
+            position: relative; z-index: 2;
+        }
+
+        .profile-pic { width: 85px; height: 85px; border-radius: 50%; object-fit: cover; border: 3px solid #f39c12; background: white; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .qr-pic { width: 85px; height: 85px; border-radius: 8px; border: 2px solid #bdc3c7; background: #ffffff; padding: 4px; flex-shrink: 0; object-fit: contain; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .student-info { flex: 1; margin: 0; text-align: left; min-width: 0; }
+        .student-info h4 { margin: 0 0 5px 0; color: #16a085; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold; }
+        .student-info p { margin: 2px 0; font-size: 14px; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:600; }
+        
+        .reader-container { width: 100%; max-width: 450px; margin: 0 auto; border-radius: 15px; overflow: hidden; border: 4px solid #2980b9;}
+        .history-section { background: rgba(255,255,255,0.8); border: 2px dashed #7f8c8d; border-radius: 12px; padding: 20px; margin-bottom: 20px;}
+        .flex-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;}
+        .flex-row > div { flex: 1; min-width: 150px; }
+
+        /* ================= การ์ดงานออนไลน์ ================= */
+        .task-card {
+            background: #fff; border: 2px solid #bdc3c7; border-radius: 10px; padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex: 1; min-width: 250px; position: relative; transition: 0.3s;
+        }
+        .task-card:hover { border-color: #9b59b6; box-shadow: 0 6px 12px rgba(155, 89, 182, 0.2); }
+        .task-icon { font-size: 30px; margin-bottom: 10px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+<div class="bg-animations">
+    <div class="cloud" style="top: 10%; font-size: 80px; animation-duration: 35s;">☁️</div>
+    <div class="cloud" style="top: 25%; font-size: 110px; animation-duration: 50s; animation-delay: -15s;">☁️</div>
+    <div class="cloud" style="top: 60%; font-size: 70px; animation-duration: 30s; animation-delay: -5s;">☁️</div>
+    <div class="leaf" style="left: 20%; font-size: 30px; animation-duration: 12s;">🍃</div>
+    <div class="leaf" style="left: 50%; font-size: 25px; animation-duration: 16s; animation-delay: -6s;">🍂</div>
+    <div class="leaf" style="left: 80%; font-size: 35px; animation-duration: 14s; animation-delay: -3s;">🍃</div>
+    <div class="bird" style="top: 20%; font-size: 40px; animation-duration: 25s;">🦅</div>
+    <div class="bird" style="top: 45%; font-size: 35px; animation-duration: 22s; animation-delay: -10s;">🕊️</div>
+    <div class="balloon" style="left: 15%; font-size: 55px; animation-duration: 25s;">🎈</div>
+    <div class="balloon" style="left: 75%; font-size: 65px; animation-duration: 30s; animation-delay: -12s;">🎈</div>
+</div>
+
+<div class="wrapper">
+    <div class="header-box">
+        <div class="logos-wrapper">
+            <img src="https://yt3.googleusercontent.com/7RYWaqq-wA1spx_EsCD4WpPKDJ3DxZ0R18YfhD-lK-cQxuBxmFoTy5j5W-X3qHuE5ePBwLnqSg=s900-c-k-c0x00ffffff-no-rj" class="main-logo" alt="UBRU Logo">
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUQ3zpOH93jGFGJ2f5fEgqVTo04zSOrkmtTYhd6LlNa1sN3SEN5LZ_z35U&s=10" class="main-logo" alt="Science Faculty Logo" style="border: 2px solid #f0f0f0;">
+        </div>
+        <div class="header-text">
+            <div class="main-title">ระบบการจัดการเรียนรู้ในชั้นเรียนรายวิชาชีววิทยา</div>
+            <div class="sub-title">
+                <span style="color: #0b5345;">คณะวิทยาศาสตร์</span> 
+                <span class="text-gray">มหาวิทยาลัย</span><span class="text-pink">ราชภัฏ</span><span class="text-gray">อุบลราชธานี</span>
+                <div style="font-size: 16px; color: #16a085; margin-top: 8px;">บูรณาการการเรียนรู้ STEM และ AI ในชั้นเรียน</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="login-section" class="content-box login-box">
+        <h2 style="text-align:center; border:none; margin-top:0;">🔐 ลงชื่อเข้าสู่ระบบ</h2>
+        <hr style="border: none; border-top: 2px dashed #3498db; margin: 15px 0 25px 0;">
+        <div class="form-group">
+            <label>เลือกสถานะ 👤:</label>
+            <select id="login-role" onchange="toggleLoginType()">
+                <option value="teacher">👨‍🏫 อาจารย์ผู้สอน</option>
+                <option value="student">🎓 นักศึกษา</option>
+            </select>
+        </div>
+        
+        <div id="teacher-login">
+            <div class="form-group">
+                <label style="color:#27ae60;">ชื่อผู้ใช้ (Username) 👤:</label>
+                <input type="text" id="teacher-username" placeholder="เช่น admin (หรือปล่อยว่างหากใช้รหัสเดิม)">
+            </div>
+            <div class="form-group">
+                <label style="color:#27ae60;">รหัสผ่านอาจารย์ 🔑:</label>
+                <input type="password" id="teacher-password" placeholder="••••••••">
+            </div>
+            <button class="btn-success" style="width: 100%; padding: 15px; font-size: 16px; margin-top: 10px;" onclick="loginTeacher()">เข้าสู่ระบบอาจารย์ 🌿</button>
+            <button class="btn-info" style="width: 100%; padding: 10px; font-size: 14px; margin-top: 5px;" onclick="registerTeacherUI()">📝 สมัครใช้งานสำหรับอาจารย์ท่านอื่น</button>
+        </div>
+        
+        <div id="student-login" class="hidden">
+            <div class="form-group">
+                <label style="color:#2980b9;">อีเมลนักศึกษา 📧:</label>
+                <input type="email" id="student-email" placeholder="example@ubru.ac.th">
+            </div>
+            <div class="form-group">
+                <label style="color:#2980b9;">รหัสผ่าน 🔑:</label>
+                <input type="password" id="student-password" placeholder="รหัสผ่าน (หากเข้าระบบครั้งแรกให้เว้นว่างไว้)">
+            </div>
+            <button class="btn-primary" style="width: 100%; padding: 15px; font-size: 16px; margin-top: 10px;" onclick="loginStudent()">เข้าสู่ระบบนักศึกษา 🐢</button>
+        </div>
+    </div>
+
+    <div id="teacher-section" class="content-box hidden">
+        <h2 style="text-align:center;"> 👨‍🏫ระบบอาจารย์ผู้สอน Dr.Kritsada  Seejandee🔬</h2>
+        <div class="nav-buttons">
+            <button class="btn-success" onclick="showTeacherTab('t-students')">👨‍🎓 1. นักศึกษา</button>
+            <button class="btn-primary" onclick="showTeacherTab('t-scan-attendance')">📸 2. เช็คชื่อ</button>
+            <button class="btn-info" onclick="showTeacherTab('t-scan-assignment')">📝 3. ส่งงาน</button>
+            <button class="btn-purple" onclick="showTeacherTab('t-history-att')">📊 4. ประวัติการมาเรียน</button>
+            <button class="btn-info" style="background:#e84393; color:white;" onclick="showTeacherTab('t-history-asn')">📝 5. ประวัติการส่งงาน</button>
+            <button class="btn-orange" onclick="showTeacherTab('t-leaves')">✉️ 6. ใบลา</button>
+            <button class="btn-warning" style="background:#e67e22;" onclick="showTeacherTab('t-exams')">🎯 7. คะแนนสอบ</button>
+            <button class="btn-warning" onclick="showTeacherTab('t-grades')">⭐ 8. ตัดเกรด</button>
+            <button class="btn-primary" style="background:#1abc9c;" onclick="showTeacherTab('t-activities')">🏕️ 9. กิจกรรม/อบรม</button>
+            <button class="btn-info" style="background:#2980b9;" onclick="showTeacherTab('t-edu-students')">📘 10. ทะเบียนนักศึกษา ครุศาสตร์ สาขาชีววิทยา</button>
+            <button class="btn-danger" style="background:#c0392b;" onclick="manageTeachersUI()">⚙️ จัดการบัญชีผู้สอน</button>
+            <button class="btn-danger" onclick="logout()">🚪 ออก</button>
+        </div>
+
+        <div id="t-students">
+            <div class="history-section" style="border-color: #2ecc71;">
+                <h3>🌱 เพิ่มข้อมูลนักศึกษา</h3>
+                <div class="flex-row">
+                    <div class="form-group" style="flex: 0.5;"><input type="number" id="s-number" placeholder="เลขที่"></div>
+                    <div class="form-group"><input type="text" id="s-id" placeholder="รหัสนักศึกษา"></div>
+                    <div class="form-group"><input type="text" id="s-fname" placeholder="ชื่อจริง"></div>
+                    <div class="form-group"><input type="text" id="s-lname" placeholder="นามสกุล"></div>
+                    <div class="form-group" style="flex: 0.5;">
+                        <label>เพศ ⚥:</label>
+                        <select id="s-gender">
+                            <option value="ชาย">ชาย</option>
+                            <option value="หญิง">หญิง</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><input type="email" id="s-email" placeholder="อีเมล"></div>
+                    <div class="form-group"><label>ห้องเรียน (Room) 🏫:</label><select id="s-room"></select></div>
+                    <div class="form-group" style="flex: 1.5;"><label>อัปโหลดรูปภาพ (ไม่บังคับ):</label><input type="file" id="s-image" accept="image/*"></div>
+                    <div><button class="btn-success" style="width: 100%; height: 42px;" onclick="addStudent()">➕ เพิ่ม</button></div>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="btn-purple" onclick="addNewRoom()">➕ เพิ่มห้องเรียนใหม่</button>
+                    <button class="btn-danger" onclick="deleteRoom()">❌ ลบห้องเรียน</button>
+                </div>
+            </div>
+
+            <div class="history-section" style="border-color: #3498db;">
+                <h3 style="color:#2980b9;">📥 นำเข้าข้อมูลนักศึกษาด้วยไฟล์ Excel</h3>
+                <div class="flex-row" style="align-items: flex-end;">
+                    <div class="form-group" style="flex: 2; margin-bottom: 0;">
+                        <input type="file" id="excel-file" accept=".xlsx, .xls, .csv">
+                    </div>
+                    <div>
+                        <button class="btn-success" style="height: 42px;" onclick="importFromExcel()">📥 นำเข้าข้อมูล</button>
+                        <button class="btn-info" style="height: 42px;" onclick="downloadExcelTemplate()">📄 โหลดไฟล์ต้นแบบ</button>
+                    </div>
+                </div>
+            </div>
+
+            <h3>💳 บัตรประจำตัวนักศึกษา (พิมพ์ยกห้องได้)</h3>
+            <div id="student-list"></div>
+        </div>
+
+        <div id="t-scan-attendance" class="hidden">
+            <div class="history-section" style="border-color: #3498db; background:#e8f8f5;">
+                <h3 style="color:#2980b9;">📸 สแกน QR Code: การเข้าเรียน</h3>
+                <div class="flex-row">
+                    <div class="form-group"><label>เลือกวิชา 📚:</label><select id="scan-att-subject"></select></div>
+                    <div class="form-group"><label>เลือกห้องเรียน 🏫:</label><select id="scan-att-room"></select></div>
+                    <div style="display:flex; gap:5px; align-items:flex-end; margin-bottom:15px;">
+                        <button class="btn-purple" onclick="addNewSubject()">➕ เพิ่มวิชา</button>
+                        <button class="btn-danger" onclick="deleteSubject()">❌ ลบวิชา</button>
+                    </div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><label>วันที่ 📅:</label><input type="date" id="scan-att-date"></div>
+                    <div class="form-group"><label>คาบเรียน/สัปดาห์ที่ 🏷️:</label><input type="text" id="scan-att-detail" placeholder="เช่น สัปดาห์ที่ 1"></div>
+                    <div class="form-group">
+                        <label>📍 สถานะ (ก่อนสแกน):</label>
+                        <select id="scan-att-status" style="font-weight:bold; color:#27ae60;">
+                            <option value="มาเรียน">🟢 มาเรียน</option>
+                            <option value="สาย">🟡 สาย</option>
+                            <option value="ลา">🔵 ลา</option>
+                            <option value="ขาด">🔴 ขาด</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- อัปเดตช่องสแกนด้วย USB ให้ใหญ่และชัดเจนขึ้น -->
+                <div class="form-group" style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.9); border: 3px dashed #3498db; border-radius: 8px; text-align:center;">
+                    <label style="color:#2980b9; font-size:18px;">🔫 ใช้เครื่องสแกนบาร์โค้ด (USB/Bluetooth):</label>
+                    <p style="font-size:14px; color:#e74c3c; margin:5px 0 10px 0;">ระบบพร้อมรับข้อมูลจากเครื่องสแกนอัตโนมัติ คุณสามารถยิงสแกนได้ทันที (หรือคลิกที่ช่องด้านล่าง)</p>
+                    <input type="text" id="usb-scanner-att" placeholder="กำลังรอรับข้อมูลจากเครื่องสแกน..." onkeypress="handleUSBScanner(event, 'attendance')" style="border:2px solid #3498db; font-size:18px; font-weight:bold; text-align:center; background:#ecf0f1; padding:15px; border-radius:10px;">
+                </div>
+
+                <button class="btn-primary" style="width: 100%; font-size: 18px; padding: 15px;" onclick="startScanner('attendance')">🟢 เปิดกล้องเช็คชื่อ (Webcam/มือถือ)</button>
+                <div style="display:flex; gap:10px; margin-top:5px;">
+                    <button class="btn-info" style="flex:1;" onclick="openManualCheck('attendance')">📝 ลงชื่อด้วยมือ (รายบุคคล)</button>
+                    <button class="btn-purple" style="flex:1;" onclick="openBulkManualCheck('attendance')">👥 ลงชื่อด้วยมือ (หลายคนพร้อมกัน)</button>
+                </div>
+                <button class="btn-danger" style="width: 100%; margin-top: 5px;" onclick="stopScanner()">🔴 ปิดกล้อง</button>
+                <div id="reader-att" class="reader-container" style="margin-top: 15px;"></div>
+            </div>
+        </div>
+
+        <div id="t-scan-assignment" class="hidden">
+            <div class="history-section" style="border-color: #9b59b6; background:#f4ebf9; margin-bottom:20px;">
+                <h3 style="color:#8e44ad;">📦 ระบบสั่งงานและรับไฟล์ส่งงานออนไลน์ (Online Submission)</h3>
+                <p style="font-size:14px; color:#555;">ให้นักศึกษาส่งไฟล์ PDF, Word, Excel, รูปภาพ หรือ ลิงก์ ผ่านระบบได้โดยตรง</p>
+                <button class="btn-purple" onclick="createNewTaskUI()" style="font-size: 16px; padding: 10px 20px;">➕ เพิ่มภาระงานใหม่</button>
+                <div id="task-cards-container" style="display:flex; gap:15px; flex-wrap:wrap; margin-top:20px;">
+                    </div>
+            </div>
+
+            <div class="history-section" style="border-color: #f1c40f; background:#fff9e6;">
+                <h3 style="color:#d35400;">📝 สแกน QR Code: เช็คการส่งงาน</h3>
+                <div class="flex-row">
+                    <div class="form-group"><label>เลือกวิชา 📚:</label><select id="scan-asn-subject"></select></div>
+                    <div class="form-group"><label>เลือกห้องเรียน 🏫:</label><select id="scan-asn-room"></select></div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><label>วันที่ 📅:</label><input type="date" id="scan-asn-date"></div>
+                    <div class="form-group"><label>ชื่องาน 🏷️:</label><input type="text" id="scan-asn-detail" placeholder="เช่น สมุดจดบทที่ 1"></div>
+                </div>
+                <div class="form-group" style="display:flex; gap:10px;">
+                    <div style="flex:1;">
+                        <label>⭐ ให้คะแนนงานนี้:</label>
+                        <input type="number" id="scan-asn-score" placeholder="คะแนนที่ได้ เช่น 10" style="font-weight:bold; color:#d35400;">
+                    </div>
+                    <div style="flex:1;">
+                        <label>📌 คะแนนเต็ม:</label>
+                        <input type="number" id="scan-asn-max-score" placeholder="คะแนนเต็ม เช่น 10" style="font-weight:bold; color:#8e44ad;">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.9); border: 3px dashed #f1c40f; border-radius: 8px; text-align:center;">
+                    <label style="color:#d35400; font-size:18px;">🔫 ใช้เครื่องสแกนบาร์โค้ด (USB/Bluetooth):</label>
+                    <p style="font-size:14px; color:#e74c3c; margin:5px 0 10px 0;">ระบบพร้อมรับข้อมูลจากเครื่องสแกนอัตโนมัติ คุณสามารถยิงสแกนได้ทันที (หรือคลิกที่ช่องด้านล่าง)</p>
+                    <input type="text" id="usb-scanner-asn" placeholder="กำลังรอรับข้อมูลจากเครื่องสแกน..." onkeypress="handleUSBScanner(event, 'assignment')" style="border:2px solid #f1c40f; font-size:18px; font-weight:bold; text-align:center; background:#ecf0f1; padding:15px; border-radius:10px;">
+                </div>
+
+                <button class="btn-warning" style="width: 100%; font-size: 18px; padding: 15px; color:#333;" onclick="startScanner('assignment')">🟡 เปิดกล้องรับงาน (Webcam/มือถือ)</button>
+                <div style="display:flex; gap:10px; margin-top:5px;">
+                    <button class="btn-info" style="flex:1;" onclick="openManualCheck('assignment')">📝 ลงคะแนนด้วยมือ (รายบุคคล)</button>
+                    <button class="btn-purple" style="flex:1;" onclick="openBulkManualCheck('assignment')">👥 ลงคะแนนด้วยมือ (หลายคนพร้อมกัน)</button>
+                </div>
+                <button class="btn-danger" style="width: 100%; margin-top: 5px;" onclick="stopScanner()">🔴 ปิดกล้อง</button>
+                <div id="reader-asn" class="reader-container" style="margin-top: 15px;"></div>
+            </div>
+        </div>
+
+        <!-- แท็บ 4 ประวัติการมาเรียน -->
+        <div id="t-history-att" class="hidden">
+            <h3>📊 4. ประวัติการมาเรียน</h3>
+            <div class="flex-row">
+                <div class="form-group"><label>วิชา:</label><select id="filter-subject-att" onchange="renderHistoryTables()"><option value="all">ทั้งหมด</option></select></div>
+                <div><button class="btn-warning" onclick="clearFilters()">🧹 ล้างตัวกรอง</button></div>
+            </div>
+
+            <div id="history-att-room-tabs" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; justify-content: center; background: #e8f8f5; padding: 15px; border-radius: 10px; border: 2px dashed #1abc9c;"></div>
+
+            <div class="history-section" style="border-color: #27ae60; margin-bottom:20px;">
+                <h4 style="color: #27ae60;">📊 กราฟเปรียบเทียบการเข้าเรียน (ชาย-หญิง)</h4>
+                <div style="margin-bottom:10px;">
+                    <button class="btn-success" onclick="exportChartToExcel('attendanceGenderChart', 'กราฟเปรียบเทียบเข้าเรียนชายหญิง')">📊 ส่งออกกราฟ Excel</button>
+                    <button class="btn-primary" onclick="exportChartToWord('attendanceGenderChart', 'กราฟเปรียบเทียบเข้าเรียนชายหญิง')">📝 ส่งออกกราฟ Word</button>
+                </div>
+                <canvas id="attendanceGenderChart" style="max-height: 300px; width:100%;"></canvas>
+                <div style="text-align:center; font-size:14px; margin-top:10px;">
+                    <span style="color:#2980b9;">🟦 สีฟ้า = นักศึกษาชาย</span> | <span style="color:#c0392b;">🟥 สีชมพู = นักศึกษาหญิง</span>
+                </div>
+            </div>
+
+            <div class="history-section" style="border-color: #27ae60; margin-bottom:20px;">
+                <h4 style="color: #27ae60;">📊 กราฟสรุปเปอร์เซ็นต์การเข้าเรียนรายบุคคล</h4>
+                <div id="att-summary-text" style="font-size:15px; margin-bottom:15px; background:#e8f8f5; padding:10px; border-radius:8px; font-weight:bold; color:#27ae60;"></div>
+                <div style="margin-bottom:10px;">
+                    <button class="btn-success" onclick="exportChartToExcel('attendanceChart', 'กราฟการเข้าเรียน')">📊 ส่งออกกราฟ Excel</button>
+                    <button class="btn-primary" onclick="exportChartToWord('attendanceChart', 'กราฟการเข้าเรียน')">📝 ส่งออกกราฟ Word</button>
+                </div>
+                <canvas id="attendanceChart" style="max-height: 400px; width:100%;"></canvas>
+                <div style="text-align:center; font-size:14px; margin-top:10px;">
+                    <span style="color:#27ae60;">🟩 สีเขียว = ผ่านเกณฑ์</span> | <span style="color:#c0392b;">🟥 สีแดง = ไม่ผ่านเกณฑ์</span>
+                </div>
+            </div>
+
+            <div class="history-section" style="border-color: #27ae60;">
+                <h4 style="color: #27ae60;">✅ ตารางประวัติการเข้าเรียน</h4>
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <div>
+                        <button class="btn-success" onclick="exportCustom('attendance', 'รายงานการเข้าเรียน', 'excel')">📊 Excel</button>
+                        <button class="btn-primary" onclick="exportCustom('attendance', 'รายงานการเข้าเรียน', 'word')">📝 Word</button>
+                    </div>
+                    <button class="btn-danger" style="background:#c0392b;" onclick="clearAllAttendance()">🗑️ ล้างประวัติเข้าเรียนทั้งหมด</button>
+                </div>
+                <table id="attendance-table">
+                    <thead><tr><th>เลขที่</th><th>รหัส</th><th style="text-align:left;">ชื่อ-นามสกุล</th><th>วันที่และเวลา</th><th>วิชา</th><th>รายละเอียด</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- แท็บ 5 ประวัติการส่งงาน -->
+        <div id="t-history-asn" class="hidden">
+            <h3>📝 5. ประวัติการส่งงาน</h3>
+            <div class="flex-row">
+                <div class="form-group"><label>วิชา:</label><select id="filter-subject-asn" onchange="renderHistoryTables()"><option value="all">ทั้งหมด</option></select></div>
+                <div><button class="btn-warning" onclick="clearFilters()">🧹 ล้างตัวกรอง</button></div>
+            </div>
+
+            <div id="history-asn-room-tabs" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; justify-content: center; background: #f4ebf9; padding: 15px; border-radius: 10px; border: 2px dashed #9b59b6;"></div>
+
+            <div class="history-section" style="border-color: #e84393; margin-bottom:20px;">
+                <h4 style="color: #e84393;">📊 กราฟเปรียบเทียบการส่งงาน (ชาย-หญิง)</h4>
+                <div style="margin-bottom:10px;">
+                    <button class="btn-success" onclick="exportChartToExcel('assignmentGenderChart', 'กราฟเปรียบเทียบส่งงานชายหญิง')">📊 ส่งออกกราฟ Excel</button>
+                    <button class="btn-primary" onclick="exportChartToWord('assignmentGenderChart', 'กราฟเปรียบเทียบส่งงานชายหญิง')">📝 ส่งออกกราฟ Word</button>
+                </div>
+                <canvas id="assignmentGenderChart" style="max-height: 300px; width:100%;"></canvas>
+                <div style="text-align:center; font-size:14px; margin-top:10px;">
+                    <span style="color:#2980b9;">🟦 สีฟ้า = นักศึกษาชาย</span> | <span style="color:#c0392b;">🟥 สีชมพู = นักศึกษาหญิง</span>
+                </div>
+            </div>
+
+            <div class="history-section" style="border-color: #8e44ad; margin-bottom:20px;">
+                <h4 style="color: #8e44ad;">📊 กราฟสรุปร้อยละการส่งงานรายบุคคล</h4>
+                <div class="form-group" style="max-width:300px;">
+                    <label style="color:#8e44ad;">📌 กำหนดเกณฑ์ผ่านการส่งงาน (%):</label>
+                    <div style="display:flex; gap:10px; margin-bottom: 10px;">
+                        <input type="number" id="asn-pass-percent" value="80">
+                        <button class="btn-info" onclick="saveAsnSettings()">อัปเดตค่า</button>
+                    </div>
+                </div>
+                <div id="asn-summary-text" style="font-size:15px; margin-bottom:15px; background:#f4ebf9; padding:10px; border-radius:8px; font-weight:bold; color:#8e44ad;"></div>
+                <div style="margin-bottom:10px;">
+                    <button class="btn-success" onclick="exportChartToExcel('assignmentChart', 'กราฟการส่งงานรายบุคคล')">📊 ส่งออกกราฟ Excel</button>
+                    <button class="btn-primary" onclick="exportChartToWord('assignmentChart', 'กราฟการส่งงานรายบุคคล')">📝 ส่งออกกราฟ Word</button>
+                </div>
+                <canvas id="assignmentChart" style="max-height: 400px; width:100%;"></canvas>
+                <div style="text-align:center; font-size:14px; margin-top:10px;">
+                    <span style="color:#27ae60;">🟩 สีเขียว = ผ่านเกณฑ์</span> | 
+                    <span style="color:#f39c12;">🟧 สีส้ม = เสี่ยง (ต่ำกว่าเกณฑ์ไม่เกิน 5%)</span> | 
+                    <span style="color:#c0392b;">🟥 สีแดง = ไม่ผ่านเกณฑ์</span>
+                </div>
+            </div>
+
+            <div class="history-section" style="border-color: #2980b9;">
+                <h4 style="color: #2980b9;">📝 ตารางประวัติการส่งงาน</h4>
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <div>
+                        <button class="btn-success" onclick="exportCustom('assignment', 'รายงานการส่งงาน', 'excel')">📊 Excel</button>
+                        <button class="btn-primary" onclick="exportCustom('assignment', 'รายงานการส่งงาน', 'word')">📝 Word</button>
+                    </div>
+                    <button class="btn-danger" style="background:#c0392b;" onclick="clearAllAssignments()">🗑️ ล้างประวัติส่งงานทั้งหมด</button>
+                </div>
+                <table id="assignment-table">
+                    <thead><tr><th>เลขที่</th><th>รหัส</th><th style="text-align:left;">ชื่อ-นามสกุล</th><th>วันที่และเวลา</th><th>วิชา</th><th>ชื่องาน</th><th>คะแนน / เต็ม</th><th>จัดการ</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="t-leaves" class="hidden">
+            <h3>✉️ รายการใบลา</h3>
+            <div class="flex-row">
+                <div class="form-group"><label>กรองวิชา:</label><select id="leave-filter-subject" onchange="renderLeaves()"><option value="all">ทั้งหมด</option></select></div>
+            </div>
+            
+            <div id="leave-room-tabs" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; justify-content: center; background: #fef5e7; padding: 15px; border-radius: 10px; border: 2px dashed #e67e22;"></div>
+
+            <div class="history-section" style="border-color: #e67e22; margin-bottom:20px;">
+                <h4 style="color: #e67e22;">📊 กราฟเปรียบเทียบการลา (ชาย-หญิง)</h4>
+                <div style="margin-bottom:10px;">
+                    <button class="btn-success" onclick="exportChartToExcel('leaveGenderChart', 'กราฟเปรียบเทียบการลาชายหญิง')">📊 ส่งออกกราฟ Excel</button>
+                    <button class="btn-primary" onclick="exportChartToWord('leaveGenderChart', 'กราฟเปรียบเทียบการลาชายหญิง')">📝 ส่งออกกราฟ Word</button>
+                </div>
+                <canvas id="leaveGenderChart" style="max-height: 300px; width:100%;"></canvas>
+                <div style="text-align:center; font-size:14px; margin-top:10px;">
+                    <span style="color:#2980b9;">🟦 สีฟ้า = นักศึกษาชาย</span> | <span style="color:#c0392b;">🟥 สีชมพู = นักศึกษาหญิง</span>
+                </div>
+            </div>
+
+            <div class="history-section" style="border-color: #d35400; margin-bottom:20px;">
+                <h4 style="color: #d35400;">📊 กราฟสรุปการลา (รายบุคคล)</h4>
+                <div style="margin-bottom:10px;">
+                    <button class="btn-success" onclick="exportChartToExcel('leaveChart', 'กราฟสรุปการลารายบุคคล')">📊 ส่งออกกราฟ Excel</button>
+                    <button class="btn-primary" onclick="exportChartToWord('leaveChart', 'กราฟสรุปการลารายบุคคล')">📝 ส่งออกกราฟ Word</button>
+                </div>
+                <canvas id="leaveChart" style="max-height: 400px; width:100%;"></canvas>
+                <div style="text-align:center; font-size:14px; margin-top:10px;">
+                    <span style="color:#2980b9;">🟦 สีฟ้า = ชาย</span> | <span style="color:#e84393;">🟥 สีชมพู = หญิง</span> | <span style="color:#7f8c8d;">⬛ สีเทา = ไม่ระบุ</span>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                <div>
+                    <button class="btn-success" onclick="exportExcel('leave-table', 'รายการใบลา')">📊 ส่งออก Excel</button>
+                    <button class="btn-primary" style="background:#2980b9;" onclick="exportGenericTableToWord('leave-table', 'รายการใบลา')">📝 ส่งออก Word</button>
+                </div>
+                <button class="btn-danger" style="background:#c0392b;" onclick="clearAllLeaves()">🗑️ ล้างใบลาทั้งหมด</button>
+            </div>
+            <table id="leave-table">
+                <thead><tr><th>เลขที่</th><th>รายละเอียดวันลา</th><th>วิชา</th><th style="text-align:left;">ชื่อ-นามสกุล</th><th>เหตุผล</th><th>จัดการ</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div id="t-exams" class="hidden">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="color:#e67e22;">🎯 ระบบกรอกคะแนนสอบ (จัดกลุ่มตามห้อง)</h3>
+                <div>
+                    <button class="btn-success" onclick="publishExams(true)">✅ ประกาศผลสอบทั้งหมด</button>
+                    <button class="btn-danger" onclick="publishExams(false)">🚫 ยกเลิกประกาศทั้งหมด</button>
+                </div>
+            </div>
+            
+            <div id="exam-room-tabs" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; justify-content: center; background: #fdf2e9; padding: 15px; border-radius: 10px; border: 2px dashed #e67e22;"></div>
+
+            <div class="history-section" style="border-color:#e67e22; margin-bottom:20px;">
+                <h4 style="color: #e67e22;">📊 กราฟเปรียบเทียบคะแนนสอบ (ชาย-หญิง)</h4>
+                <div style="margin-bottom:10px;">
+                    <button class="btn-success" onclick="exportChartToExcel('examGenderChart', 'กราฟเปรียบเทียบคะแนนสอบชายหญิง')">📊 ส่งออกกราฟ Excel</button>
+                    <button class="btn-primary" onclick="exportChartToWord('examGenderChart', 'กราฟเปรียบเทียบคะแนนสอบชายหญิง')">📝 ส่งออกกราฟ Word</button>
+                </div>
+                <canvas id="examGenderChart" style="max-height: 300px; width:100%;"></canvas>
+                <div style="text-align:center; font-size:14px; margin-top:10px;">
+                    <span style="color:#2980b9;">🟦 สีฟ้า = นักศึกษาชาย</span> | <span style="color:#c0392b;">🟥 สีชมพู = นักศึกษาหญิง</span>
+                </div>
+            </div>
+
+            <div class="history-section" style="border-color:#d35400; margin-bottom:20px;">
+                <h4 style="color: #d35400;">📊 กราฟสรุปร้อยละคะแนนสอบรายบุคคล</h4>
+                <div id="exam-summary-text" style="font-size:15px; margin-bottom:15px; background:#fdf2e9; padding:10px; border-radius:8px; font-weight:bold; color:#e67e22;"></div>
+                <div style="margin-bottom:10px;">
+                    <button class="btn-success" onclick="exportChartToExcel('examChart', 'กราฟคะแนนสอบ')">📊 ส่งออกกราฟ Excel</button>
+                    <button class="btn-primary" onclick="exportChartToWord('examChart', 'กราฟคะแนนสอบ')">📝 ส่งออกกราฟ Word</button>
+                </div>
+                <canvas id="examChart" style="max-height: 400px; width:100%;"></canvas>
+                <div style="text-align:center; font-size:14px; margin-top:10px;">
+                    <span style="color:#f39c12;">🟧 สีทอง = สอบผ่าน</span> | <span style="color:#c0392b;">🟥 สีแดง = สอบไม่ผ่าน</span>
+                </div>
+            </div>
+
+            <div class="history-section" style="border-color:#e67e22;">
+                <div class="form-group" style="max-width:300px;">
+                    <label style="color:#1abc9c;">📌 กำหนดคะแนนเต็ม (Max Score):</label>
+                    <div style="display:flex; gap:10px; margin-bottom: 10px;">
+                        <input type="number" id="exam-max-score" value="60">
+                    </div>
+                    <label style="color:#e67e22;">📌 เกณฑ์ผ่าน (%):</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="number" id="exam-pass-percent" value="50">
+                        <button class="btn-info" onclick="saveExamSettings()">อัปเดตค่า</button>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn-success" style="margin-bottom: 10px;" onclick="exportExcel('exam-table', 'คะแนนสอบ')">📊 ส่งออก Excel</button>
+                    <button class="btn-primary" style="margin-bottom: 10px; background:#2980b9;" onclick="exportGenericTableToWord('exam-table', 'คะแนนสอบ')">📝 ส่งออก Word</button>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table id="exam-table">
+                        <thead><tr><th>รหัส</th><th style="text-align:left;">ชื่อ-นามสกุล</th><th>ได้คะแนน / เต็ม</th><th>สถานะประกาศ</th><th>จัดการ</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                    <div style="text-align:right; margin-top:10px;">
+                        <button class="btn-success" style="padding:10px 20px; font-size:16px;" onclick="saveAllExams()">💾 บันทึกคะแนนสอบในตารางทั้งหมด</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="t-grades" class="hidden">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="color:#e67e22;">⭐ ระบบสรุปคะแนนและตัดเกรด</h3>
+                <div>
+                    <button class="btn-success" onclick="publishGrades(true)">✅ ประกาศเกรดทั้งหมด</button>
+                    <button class="btn-danger" onclick="publishGrades(false)">🚫 ยกเลิกประกาศเกรดทั้งหมด</button>
+                </div>
+            </div>
+            <p style="color:#d35400; font-weight:bold;">* ระบบจะรวมคะแนนจาก: คะแนนเก็บ(สแกน/ส่งออนไลน์) + กลางภาค/ปลายภาค + พิเศษ</p>
+            
+            <div id="grade-room-tabs" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; justify-content: center; background: #ebf5fb; padding: 15px; border-radius: 10px; border: 2px dashed #3498db;"></div>
+
+            <div class="history-section" style="border-color:#3498db; margin-bottom: 20px;">
+                <h4 style="color: #2980b9;">📊 สรุปผลการเรียนและกราฟเกรด (เปรียบเทียบชาย-หญิง)</h4>
+                <div id="grade-summary-text" style="font-size:16px; margin-bottom:15px; background:#e8f8f5; padding:15px; border-radius:8px; font-weight:bold; color:#117864; line-height: 1.6;">
+                    <!-- แสดงสรุป A B C ตรงนี้ -->
+                </div>
+                <div style="margin-bottom:10px;">
+                    <button class="btn-success" onclick="exportChartToExcel('gradeGenderChart', 'กราฟเปรียบเทียบเกรดชายหญิง')">📊 ส่งออกกราฟ Excel</button>
+                    <button class="btn-primary" onclick="exportChartToWord('gradeGenderChart', 'กราฟเปรียบเทียบเกรดชายหญิง')">📝 ส่งออกกราฟ Word</button>
+                </div>
+                <canvas id="gradeGenderChart" style="max-height: 350px; width:100%;"></canvas>
+                <div style="text-align:center; font-size:14px; margin-top:10px;">
+                    <span style="color:#2980b9;">🟦 สีฟ้า = นักศึกษาชาย</span> | <span style="color:#c0392b;">🟥 สีชมพู = นักศึกษาหญิง</span>
+                </div>
+            </div>
+
+            <div class="history-section" style="border-color:#2980b9; margin-bottom: 20px;">
+                <h4 style="color: #2980b9;">📊 กราฟสรุปเกรด (รายบุคคล)</h4>
+                <div style="margin-bottom:10px;">
+                    <button class="btn-success" onclick="exportChartToExcel('gradeChart', 'กราฟสรุปเกรดรายบุคคล')">📊 ส่งออกกราฟ Excel</button>
+                    <button class="btn-primary" onclick="exportChartToWord('gradeChart', 'กราฟสรุปเกรดรายบุคคล')">📝 ส่งออกกราฟ Word</button>
+                </div>
+                <canvas id="gradeChart" style="max-height: 400px; width:100%;"></canvas>
+                <div style="text-align:center; font-size:14px; margin-top:10px;">
+                    <span style="color:#27ae60;">🟩 A</span> | 
+                    <span style="color:#2980b9;">🟦 B+, B</span> | 
+                    <span style="color:#f1c40f;">🟨 C+, C</span> | 
+                    <span style="color:#e67e22;">🟧 D+, D</span> | 
+                    <span style="color:#c0392b;">🟥 F</span>
+                </div>
+            </div>
+
+            <div>
+                <button class="btn-success" style="margin-bottom: 10px;" onclick="exportExcel('grade-table', 'สรุปเกรด')">📊 ส่งออก Excel</button>
+                <button class="btn-primary" style="margin-bottom: 10px; background:#2980b9;" onclick="exportGenericTableToWord('grade-table', 'สรุปเกรด')">📝 ส่งออก Word</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table id="grade-table" style="min-width:1000px;">
+                    <thead>
+                        <tr>
+                            <th style="width:50px;">เลขที่</th>
+                            <th>รหัส</th>
+                            <th style="text-align:left; min-width:150px;">ชื่อ-นามสกุล</th>
+                            <th style="background:#e8f8f5; color:#117864;">คะแนนเก็บ (Auto)</th>
+                            <th style="background:#e8f8f5; color:#117864;">กลางภาค</th>
+                            <th style="background:#e8f8f5; color:#117864;">ปลายภาค</th>
+                            <th style="background:#e8f8f5; color:#117864;">พิเศษ</th>
+                            <th>รวมทั้งหมด</th>
+                            <th>เกรด</th>
+                            <th>สถานะ</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div style="text-align:right; margin-top:10px;">
+                    <button class="btn-success" style="padding:10px 20px; font-size:16px;" onclick="saveAllGrades()">💾 บันทึกคะแนนในตารางทั้งหมด</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="t-activities" class="hidden">
+            <div class="history-section" style="border-color: #1abc9c; background:#e8f8f5;">
+                <h3 style="color:#117864;">🏕️ ระบบบันทึกการเข้าร่วมกิจกรรม / อบรม</h3>
+                <div class="flex-row">
+                    <div class="form-group"><label>ชื่อกิจกรรม/อบรม 🏷️:</label><input type="text" id="act-name" placeholder="เช่น อบรมค่ายวิทยาศาสตร์"></div>
+                    <div class="form-group"><label>วันที่ 📅:</label><input type="date" id="act-date"></div>
+                    <div class="form-group"><label>สถานที่/รายละเอียด 📍:</label><input type="text" id="act-detail" placeholder="เช่น หอประชุม มหาวิทยาลัย"></div>
+                </div>
+                <button class="btn-success" style="width: 100%; font-size: 16px; padding: 12px; margin-bottom:15px;" onclick="addActivity()">➕ สร้างรายการกิจกรรม</button>
+
+                <hr style="border:1px dashed #1abc9c; margin: 15px 0;">
+
+                <h4 style="color:#16a085;">📸 สแกน QR Code เข้าร่วมกิจกรรม</h4>
+                <div class="flex-row">
+                    <div class="form-group" style="flex:2;"><label>เลือกกิจกรรมที่ต้องการสแกน:</label><select id="scan-act-select"></select></div>
+                </div>
+                
+                <!-- อัปเดตช่องสแกนด้วย USB ให้ใหญ่และชัดเจนขึ้น -->
+                <div class="form-group" style="margin-top: 10px; padding: 15px; background: rgba(255,255,255,0.9); border: 3px dashed #1abc9c; border-radius: 8px; text-align:center;">
+                    <label style="color:#117864; font-size:18px;">🔫 ใช้เครื่องสแกนบาร์โค้ด (USB/Bluetooth):</label>
+                    <p style="font-size:14px; color:#e74c3c; margin:5px 0 10px 0;">ระบบพร้อมรับข้อมูลจากเครื่องสแกนอัตโนมัติ คุณสามารถยิงสแกนได้ทันที (หรือคลิกที่ช่องด้านล่าง)</p>
+                    <input type="text" id="usb-scanner-act" placeholder="กำลังรอรับข้อมูลจากเครื่องสแกน..." onkeypress="handleUSBScanner(event, 'activity')" style="border:2px solid #1abc9c; font-size:18px; font-weight:bold; text-align:center; background:#ecf0f1; padding:15px; border-radius:10px;">
+                </div>
+
+                <button class="btn-primary" style="background:#1abc9c; width: 100%; font-size: 18px; padding: 15px;" onclick="startScanner('activity')">🟢 เปิดกล้องสแกนกิจกรรม (Webcam/มือถือ)</button>
+                <div style="display:flex; gap:10px; margin-top:5px;">
+                    <button class="btn-info" style="flex:1;" onclick="openManualActivityCheck()">📝 ลงชื่อด้วยมือ (รายบุคคล)</button>
+                </div>
+                <button class="btn-danger" style="width: 100%; margin-top: 5px;" onclick="stopScanner()">🔴 ปิดกล้อง</button>
+                <div id="reader-act" class="reader-container" style="margin-top: 15px;"></div>
+            </div>
+
+            <div class="history-section" style="border-color: #117864; margin-bottom:20px;">
+                <h4 style="color: #117864;">📊 กราฟเปรียบเทียบการเข้าอบรม (ชาย-หญิง)</h4>
+                <div style="margin-bottom:10px;">
+                    <button class="btn-success" onclick="exportChartToExcel('activityGenderChart', 'กราฟเปรียบเทียบกิจกรรมชายหญิง')">📊 ส่งออกกราฟ Excel</button>
+                    <button class="btn-primary" onclick="exportChartToWord('activityGenderChart', 'กราฟเปรียบเทียบกิจกรรมชายหญิง')">📝 ส่งออกกราฟ Word</button>
+                </div>
+                <canvas id="activityGenderChart" style="max-height: 300px; width:100%;"></canvas>
+                <div style="text-align:center; font-size:14px; margin-top:10px;">
+                    <span style="color:#2980b9;">🟦 สีฟ้า = นักศึกษาชาย</span> | <span style="color:#c0392b;">🟥 สีชมพู = นักศึกษาหญิง</span>
+                </div>
+            </div>
+
+            <div class="history-section" style="border-color: #16a085; margin-bottom:20px;">
+                <h4 style="color: #16a085;">📊 กราฟสถิติการเข้าอบรม (แต่ละกิจกรรม)</h4>
+                <div style="margin-bottom:10px;">
+                    <button class="btn-success" onclick="exportChartToExcel('activityChart', 'กราฟสถิติแต่ละกิจกรรม')">📊 ส่งออกกราฟ Excel</button>
+                    <button class="btn-primary" onclick="exportChartToWord('activityChart', 'กราฟสถิติแต่ละกิจกรรม')">📝 ส่งออกกราฟ Word</button>
+                </div>
+                <canvas id="activityChart" style="max-height: 400px; width:100%;"></canvas>
+            </div>
+
+            <div class="history-section" style="border-color: #1abc9c;">
+                <h4 style="color: #117864;">📊 ประวัติผู้เข้าร่วมกิจกรรม</h4>
+                <div class="flex-row">
+                    <div class="form-group"><label>กรองตามกิจกรรม:</label><select id="filter-act" onchange="renderActivityTable()"><option value="all">ทั้งหมด</option></select></div>
+                    <div>
+                        <button class="btn-success" onclick="exportCustom('activity', 'รายงานการเข้ากิจกรรม', 'excel')">📊 Excel</button>
+                        <button class="btn-primary" style="background:#2980b9;" onclick="exportCustom('activity', 'รายงานการเข้ากิจกรรม', 'word')">📝 Word</button>
+                    </div>
+                    <div><button class="btn-danger" style="background:#c0392b;" onclick="clearAllActivities()">🗑️ ล้างประวัติการเข้าร่วม</button></div>
+                </div>
+                <table id="activity-table">
+                    <thead><tr><th>เลขที่</th><th>รหัส</th><th style="text-align:left;">ชื่อ-นามสกุล</th><th>กิจกรรม</th><th>วันที่</th><th>สถานที่</th><th>เวลาที่สแกน</th><th>จัดการ</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ================= แท็บ 10. ทะเบียนนักศึกษา ครุศาสตร์ สาขาชีววิทยา ================= -->
+        <div id="t-edu-students" class="hidden">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="color:#2980b9;">📘 แฟ้มสะสมรายชื่อนักศึกษา หลักสูตรครุศาสตร์ สาขาวิชาชีววิทยา</h3>
+            </div>
+
+            <div class="history-section" style="border-color: #2980b9;">
+                <h3>➕ เพิ่มข้อมูลนักศึกษา (ทะเบียนหลัก)</h3>
+                <div class="flex-row">
+                    <div class="form-group" style="flex: 0.5;"><input type="number" id="es-number" placeholder="เลขที่"></div>
+                    <div class="form-group"><input type="text" id="es-id" placeholder="รหัสนักศึกษา"></div>
+                    <div class="form-group"><input type="text" id="es-fname" placeholder="ชื่อจริง"></div>
+                    <div class="form-group"><input type="text" id="es-lname" placeholder="นามสกุล"></div>
+                    <div class="form-group" style="flex: 0.8;"><label>เพศ ⚥:</label><select id="es-gender"><option value="ชาย">ชาย</option><option value="หญิง">หญิง</option></select></div>
+                </div>
+                <div class="flex-row">
+                    <div class="form-group"><input type="email" id="es-email" placeholder="อีเมล"></div>
+                    <div class="form-group"><label>ปีการศึกษา 📅:</label><input type="number" id="es-year" placeholder="เช่น 2567"></div>
+                    <div class="form-group" style="flex: 1.5;"><label>อัปโหลดรูปภาพ (ไม่บังคับ):</label><input type="file" id="es-image" accept="image/*"></div>
+                    <div><button class="btn-primary" style="width: 100%; height: 42px;" onclick="addEduStudent()">➕ เพิ่มลงทะเบียน</button></div>
+                </div>
+            </div>
+
+             <div class="history-section" style="border-color: #8e44ad;">
+                <h3 style="color:#8e44ad;">📥 นำเข้าข้อมูลด้วยไฟล์ Excel (เฉพาะระบบทะเบียนหลัก)</h3>
+                <div class="flex-row" style="align-items: flex-end;">
+                    <div class="form-group" style="flex: 2; margin-bottom: 0;">
+                        <input type="file" id="excel-file-edu" accept=".xlsx, .xls, .csv">
+                    </div>
+                    <div>
+                        <button class="btn-purple" style="height: 42px;" onclick="importEduFromExcel()">📥 นำเข้าข้อมูล</button>
+                        <button class="btn-info" style="height: 42px; margin-left: 5px;" onclick="downloadEduExcelTemplate()">📄 โหลดไฟล์ต้นแบบ</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="history-section" style="border-color: #f39c12;">
+                <h3 style="color:#d35400;">📊 สถิติจำนวนนักศึกษาแยกตามปีการศึกษาและเพศ</h3>
+                <div style="margin-bottom:10px;">
+                    <button class="btn-success" onclick="exportChartToExcel('eduChart', 'สถิตินักศึกษาครุศาสตร์')">📊 ส่งออกกราฟ Excel</button>
+                    <button class="btn-primary" onclick="exportChartToWord('eduChart', 'สถิตินักศึกษาครุศาสตร์')">📝 ส่งออกกราฟ Word</button>
+                </div>
+                <canvas id="eduChart" style="max-height: 300px; width:100%;"></canvas>
+            </div>
+
+            <div id="edu-year-tabs" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; justify-content: center; background: #ebf5fb; padding: 15px; border-radius: 10px; border: 2px dashed #3498db;"></div>
+
+            <div style="margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: space-between;">
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-success" onclick="exportEduStudentsExcel()">📊 ส่งออก Excel (รายชื่อ)</button>
+                    <button class="btn-primary" style="background:#2980b9;" onclick="exportEduStudentsWord()">📝 ส่งออก Word (รายชื่อ)</button>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-danger" style="background:#e67e22;" onclick="deleteEduStudentsByYearUI()">🗑️ ลบตามปีการศึกษา</button>
+                    <button class="btn-danger" style="background:#c0392b;" onclick="deleteAllEduStudents()">🗑️ ลบทั้งหมด</button>
+                </div>
+            </div>
+            
+            <div id="edu-student-content"></div>
+        </div>
+    </div>
+
+    <div id="student-section" class="content-box hidden">
+        <hr style="border: none; border-top: 2px dashed #bdc3c7; margin: 20px 0;">
+        <h2 style="text-align:center;"> 🎓ระบบนักศึกษา (Student Portal)🌻</h2>
+        <div style="text-align:center; margin-bottom: 15px;">
+            <img id="current-student-pic" src="" style="width:100px; height:100px; border-radius:50%; border:3px solid #2ecc71;">
+            <h3 id="current-student-name" style="color:#2c3e50; margin-top:10px; margin-bottom:5px;"></h3>
+            <p id="current-student-details" style="color:#7f8c8d; font-size:14px; margin:0; line-height:1.6;"></p>
+            
+            <div style="margin-top: 15px; background: #f0f8ff; padding: 15px; border-radius: 10px; display: inline-block; border: 2px dashed #3498db;">
+                <p style="font-weight:bold; color:#2980b9; margin:0 0 10px 0;">📱 QR Code สำหรับสแกนเข้าเรียน/ส่งงาน/กิจกรรม</p>
+                <img id="current-student-qr" src="" style="width:130px; height:130px; border:2px solid #bdc3c7; border-radius:10px; padding:5px; background:white;">
+            </div>
+            </div>
+        <div class="nav-buttons">
+            <button class="btn-primary" onclick="showStudentTab('s-dashboard')">📊 ผลการเรียน</button>
+            <button class="btn-info" onclick="showStudentTab('s-assignments')">📤 ส่งงานออนไลน์</button>
+            <button class="btn-orange" onclick="showStudentTab('s-leave')">✉️ ส่งใบลา</button>
+            <button class="btn-danger" onclick="logout()">🚪 ออกจากระบบ</button>
+        </div>
+
+        <div id="s-dashboard">
+            <div class="history-section" style="border-color:#f1c40f; display:flex; gap:10px; flex-wrap:wrap;">
+                <div style="flex:1; background:#e8f8f5; padding:15px; border-radius:10px; text-align:center;">
+                    <h4 style="margin:0; color:#16a085;">คะแนนรวม</h4>
+                    <h2 id="my-total-score" style="margin:5px 0;">รอยืนยัน</h2>
+                </div>
+                <div style="flex:1; background:#fff3cd; padding:15px; border-radius:10px; text-align:center;">
+                    <h4 style="margin:0; color:#d35400;">คะแนนสอบ</h4>
+                    <h4 id="my-exam-score" style="margin:5px 0;">รอยืนยัน</h4>
+                </div>
+                <div style="flex:1; background:#f9ebea; padding:15px; border-radius:10px; text-align:center;">
+                    <h4 style="margin:0; color:#c0392b;">เกรดที่ได้</h4>
+                    <h2 id="my-grade" style="margin:5px 0;">รอยืนยัน</h2>
+                </div>
+                <div style="flex:1; background:#ebf5fb; padding:15px; border-radius:10px; text-align:center;">
+                    <h4 style="margin:0; color:#2980b9;">ร้อยละการมาเรียน</h4>
+                    <h2 id="my-att-percent" style="margin:5px 0;">-</h2>
+                    <p id="my-att-status" style="margin:0; font-size:13px;"></p>
+                </div>
+            </div>
+
+            <div class="history-section" style="border-color:#3498db; margin-top:20px;">
+                <h4 style="margin-top:0; color:#2980b9;">🔔 การแจ้งเตือน & ธุรกรรมล่าสุด</h4>
+                <ul id="my-notifications" style="list-style:none; padding-left:0; margin:0; line-height:1.6; font-size:14px;">
+                    </ul>
+            </div>
+            
+            <h4 style="color:#27ae60;">✅ ประวัติการเข้าเรียน</h4>
+            <table id="my-attendance-table"><thead><tr><th>วันที่และเวลา</th><th>วิชา</th><th>รายละเอียด</th><th>สถานะ</th></tr></thead><tbody></tbody></table>
+
+            <h4 style="color:#2980b9; margin-top:20px;">📝 ประวัติคะแนนเก็บ/ส่งงาน</h4>
+            <table id="my-assignment-table"><thead><tr><th>วันที่และเวลา</th><th>วิชา</th><th>ชื่องาน</th><th>คะแนนที่ได้ / เต็ม</th></tr></thead><tbody></tbody></table>
+            
+            <h4 style="color:#117864; margin-top:20px;">🏕️ ประวัติเข้าร่วมกิจกรรม/อบรม</h4>
+            <table id="my-activity-table"><thead><tr><th>วันที่</th><th>กิจกรรม</th><th>สถานที่</th><th>เวลาที่บันทึก</th></tr></thead><tbody></tbody></table>
+
+            <h4 style="color:#e67e22; margin-top:20px;">✉️ ประวัติการส่งใบลาของฉัน</h4>
+            <table id="my-leave-history-dash">
+                <thead><tr><th>รายละเอียดวันลา</th><th>วิชา</th><th>เหตุผล</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div id="s-assignments" class="hidden">
+            <div class="history-section" style="border-color:#8e44ad;">
+                <h3 style="color:#8e44ad;">📤 รายการภาระงานที่ต้องส่ง</h3>
+                <div id="student-task-list" style="display:flex; flex-direction:column; gap:15px; margin-top:15px;">
+                    </div>
+            </div>
+        </div>
+
+        <div id="s-leave" class="hidden">
+            <div class="history-section" style="border-color:#e67e22;">
+                <h3>✉️ แบบฟอร์มส่งใบลา</h3>
+                <div class="form-group"><input type="date" id="leave-date"></div>
+                <div class="form-group"><label>วิชาที่ลา:</label><select id="s-leave-subject"></select></div>
+                <div class="form-group"><label>ห้องเรียนของคุณ:</label><select id="s-leave-room"></select></div>
+                <div class="form-group"><input type="text" id="leave-reason" placeholder="เหตุผล (ป่วย/ลากิจ)"></div>
+                <button class="btn-orange" onclick="submitLeave()" style="width: 100%;">✈️ ส่งใบลา</button>
+                
+                <h4 style="color:#e67e22; margin-top:30px;">ประวัติการส่งใบลาของฉัน</h4>
+                <table id="my-leave-history">
+                    <thead><tr><th>รายละเอียดวันลา</th><th>วิชา</th><th>เหตุผล</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align:center; padding: 15px; margin-top: 15px; color: #555555; position: relative; z-index: 10; font-size: 16px; text-shadow: none; box-shadow: none; background: transparent;">
+        By Dr. Kritsada Seejandee
+    </div>
+
+</div>
+
+<div id="student-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto; padding:20px; box-sizing:border-box;">
+    <div style="background:white; max-width:800px; margin: 20px auto; padding:25px; border-radius:15px; border-top:8px solid #3498db; position:relative;">
+        <div style="display:flex; align-items:center; gap:15px; margin-bottom: 20px;">
+            <img id="modal-student-pic" src="" style="width:80px; height:80px; border-radius:50%; border:3px solid #f39c12; object-fit:cover;">
+            <h2 id="modal-student-name" style="margin:0; border:none; color:#2c3e50;">ประวัตินักศึกษา</h2>
+        </div>
+        <div id="modal-content" style="max-height: 60vh; overflow-y:auto; padding-right:10px;"></div>
+        <button class="btn-danger" style="margin-top:20px; width:100%; padding:12px; font-size:16px;" onclick="closeModal()">❌ ปิดหน้าต่าง</button>
+    </div>
+</div>
+<script>
+    // ================= ปลั๊กอิน Chart.js แสดงตัวเลขบนกราฟ และอัปเดตสำหรับกราฟเกรด =================
+    const chartDataLabelsPlugin = {
+        id: 'customDataLabels',
+        afterDatasetsDraw(chart, args, pluginOptions) {
+            const { ctx } = chart;
+            ctx.font = 'bold 12px Sarabun';
+            ctx.fillStyle = '#2c3e50';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            
+            chart.data.datasets.forEach((dataset, i) => {
+                const meta = chart.getDatasetMeta(i);
+                meta.data.forEach((bar, index) => {
+                    const val = dataset.data[index];
+                    if (val !== undefined && val !== null && val !== 0) {
+                        let text = val + (chart.canvas.id.includes('Chart') && !chart.canvas.id.includes('grade') && !chart.canvas.id.includes('activity') && !chart.canvas.id.includes('exam') && !chart.canvas.id.includes('leave') ? '%' : '');
+                        
+                        // สำหรับเปรียบเทียบร้อยละให้แสดง % 
+                        if(chart.canvas.id === 'assignmentGenderChart' || chart.canvas.id === 'attendanceGenderChart' || chart.canvas.id === 'examGenderChart') {
+                            text = val + '%';
+                        }
+                        
+                        // เพิ่มเช็คถ้าเป็นกราฟเกรดให้ดึง customLabels มาแสดง (เช่น F (45))
+                        if (dataset.customLabels && dataset.customLabels[index]) {
+                            text = dataset.customLabels[index];
+                        }
+                        ctx.fillText(text, bar.x, bar.y - 5);
+                    }
+                });
+            });
+        }
+    };
+
+    // ================= ฟังก์ชันจัดการรูปแบบวันที่ภาษาไทย =================
+    function getThaiDateTime() {
+        const now = new Date();
+        const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        return `วันที่ ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear() + 543} เวลา ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} น.`;
+    }
+
+    function formatJustDate(dateStr) {
+        if(!dateStr) return '';
+        let d = new Date(dateStr);
+        if(isNaN(d)) return dateStr;
+        const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        return `วันที่ ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+    }
+
+    function formatThaiDateTimeDisplay(dateStr, timestampStr) {
+        let d = new Date(dateStr);
+        if(isNaN(d)) return `${dateStr} ${timestampStr || ''}`;
+        const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        let day = d.getDate();
+        let month = months[d.getMonth()];
+        let year = d.getFullYear() + 543;
+        
+        let timePart = "";
+        if (timestampStr) {
+            if (timestampStr.includes('วันที่')) {
+                return timestampStr; 
+            } else if (timestampStr.includes('เวลา')) {
+                timePart = ` ${timestampStr}`;
+            } else {
+                let m = timestampStr.match(/(\d{1,2}):(\d{2})/);
+                if(m) {
+                    timePart = ` เวลา ${m[1].padStart(2,'0')}:${m[2]} น.`;
+                } else {
+                    timePart = ` เวลา ${timestampStr}`;
+                }
+            }
+        }
+        return `วันที่ ${day} ${month} ${year}${timePart}`;
+    }
+
+    // ================= URL ของ Google Apps Script =================
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwcF5VHkWcXrwcqS38NlrRCsqGErH1eXm4f7p6vbW8jaTqB4f-CbDOLtrs6LWjPNloEBg/exec"; 
+    
+    // ================= ฐานข้อมูลส่วนกลาง (Multi-Teacher) =================
+    let teachers = JSON.parse(localStorage.getItem('bio_teachers'));
+    if (!teachers || teachers.length === 0) {
+        teachers = [{username: 'admin', password: 'Biology', name: 'Dr.Kritsada Seejandee'}];
+    } else {
+        let adminUser = teachers.find(t => t.username === 'admin');
+        if (adminUser && (adminUser.name === 'Dr.Kritsada' || adminUser.name.trim() === 'Dr.Kritsada')) {
+            adminUser.name = 'Dr.Kritsada Seejandee';
+            localStorage.setItem('bio_teachers', JSON.stringify(teachers));
+        }
+    }
+    let appData = JSON.parse(localStorage.getItem('bio_app_data')) || {};
+
+    function migrateOldData() {
+        if (!localStorage.getItem('bio_app_data_migrated')) {
+            let oldStudents = localStorage.getItem('bio_students');
+            if (oldStudents) {
+                appData['admin'] = {
+                    students: JSON.parse(oldStudents) || [],
+                    eduStudents: [],
+                    records: JSON.parse(localStorage.getItem('bio_records')) || [],
+                    leaves: JSON.parse(localStorage.getItem('bio_leaves')) || [],
+                    subjects: JSON.parse(localStorage.getItem('bio_subjects')) || ['ชีววิทยาทั่วไป', 'พันธุศาสตร์', 'สรีรวิทยาของพืช', 'อนุกรมวิธานของชันโรง (Tetragonula)'],
+                    rooms: JSON.parse(localStorage.getItem('bio_rooms')) || ['ชีววิทยา ปี 1 ห้อง 1', 'ชีววิทยา ปี 2 ห้อง 1'],
+                    grades: JSON.parse(localStorage.getItem('bio_grades')) || {},
+                    exams: JSON.parse(localStorage.getItem('bio_exams')) || { maxScore: 60, passPercent: 50, published: false, scores: {}, publishedIndividuals: {} },
+                    tasks: JSON.parse(localStorage.getItem('bio_tasks')) || [],
+                    submissions: JSON.parse(localStorage.getItem('bio_submissions')) || [],
+                    activities: [], activityRecords: []
+                };
+            }
+            localStorage.setItem('bio_app_data_migrated', 'true');
+        }
+    }
+    migrateOldData();
+
+    // ตัวแปรเก็บข้อมูลสำหรับเซสชันที่ใช้งานอยู่ (แยกตามอาจารย์)
+    let students = [];
+    let eduStudents = []; 
+    let records = []; 
+    let leaves = [];
+    let subjects = [];
+    let rooms = [];
+    let grades = {}; 
+    let exams = {};
+    let tasks = []; 
+    let submissions = []; 
+    let activities = [];
+    let activityRecords = [];
+
+    const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+    let currentStudentEmail = null;
+    let activeTeacherUsername = null; 
+    
+    let html5QrcodeScanner = null; 
+    let activeScannerType = null; 
+    let currentHistoryAttRoom = 'all';
+    let currentHistoryAsnRoom = 'all';
+    let currentLeaveRoom = 'all';
+    let currentExamRoom = 'all';
+    let currentGradeRoom = 'all';
+    let currentEduYear = 'all';
+    
+    let eduChartInstance = null;
+    let attendanceChartInstance = null;
+    let attendanceGenderChartInstance = null;
+    let assignmentChartInstance = null;
+    let assignmentGenderChartInstance = null;
+    let leaveChartInstance = null;
+    let leaveGenderChartInstance = null;
+    let examChartInstance = null;
+    let examGenderChartInstance = null;
+    let gradeChartInstance = null;
+    let gradeGenderChartInstance = null;
+    let activityChartInstance = null;
+    let activityGenderChartInstance = null;
+
+    let asnPassPercent = 80;
+
+    // ================= ระบบดักจับ Barcode Scanner อัตโนมัติ (Global Listener) =================
+    // ช่วยให้ไม่ต้องเอาเมาส์ไปคลิกที่ช่อง input ก็สามารถยิงสแกนเนอร์ USB/Bluetooth ได้เลย
+    let globalBarcodeStr = "";
+    let globalBarcodeTimeout = null;
+
+    document.addEventListener('keypress', function(e) {
+        let activeTag = document.activeElement.tagName.toLowerCase();
+        let activeId = document.activeElement.id;
+        let isScannerInput = activeId === 'usb-scanner-att' || activeId === 'usb-scanner-asn' || activeId === 'usb-scanner-act';
+
+        // ถ้าผู้ใช้กำลังพิมพ์ในช่อง Input อื่นๆ ที่ไม่ใช่ช่องสแกน ให้ทำงานตามปกติ
+        if ((activeTag === 'input' || activeTag === 'textarea') && !isScannerInput) return;
+
+        if (e.key === 'Enter') {
+            if (globalBarcodeStr.length > 0) {
+                let scannedData = globalBarcodeStr.trim();
+                globalBarcodeStr = ""; // เคลียร์ค่าหลังสแกนเสร็จ
+                
+                // ตรวจสอบว่าปัจจุบันเปิดแท็บสแกนไหนอยู่
+                if (!document.getElementById('t-scan-attendance').classList.contains('hidden')) {
+                    onUsbScanSuccess(scannedData, 'attendance');
+                } else if (!document.getElementById('t-scan-assignment').classList.contains('hidden')) {
+                    onUsbScanSuccess(scannedData, 'assignment');
+                } else if (!document.getElementById('t-activities').classList.contains('hidden')) {
+                    onUsbScanSuccess(scannedData, 'activity');
+                }
+            }
+        } else {
+            globalBarcodeStr += e.key;
+            clearTimeout(globalBarcodeTimeout);
+            // เครื่องสแกนจะส่งข้อมูลมาเร็วมาก (หลักมิลลิวินาที) ถ้าทิ้งช่วงเกิน 50ms แปลว่าคนพิมพ์ ให้ล้างค่าทิ้ง
+            globalBarcodeTimeout = setTimeout(() => {
+                globalBarcodeStr = "";
+            }, 50); 
+        }
+    });
+    // =========================================================================================
+
+    document.getElementById('scan-att-date').valueAsDate = new Date();
+    document.getElementById('scan-asn-date').valueAsDate = new Date();
+    document.getElementById('act-date').valueAsDate = new Date();
+
+    function loadSessionData(username) {
+        appData = JSON.parse(localStorage.getItem('bio_app_data')) || {};
+        
+        if (!appData[username]) {
+            appData[username] = {
+                students: [], eduStudents: [], records: [], leaves: [],
+                subjects: ['ชีววิทยาทั่วไป', 'พันธุศาสตร์', 'สรีรวิทยาของพืช', 'อนุกรมวิธานของชันโรง (Tetragonula)'], rooms: ['ชีววิทยา ปี 1 ห้อง 1', 'ชีววิทยา ปี 2 ห้อง 1'],
+                grades: {}, exams: { maxScore: 60, passPercent: 50, published: false, scores: {}, publishedIndividuals: {} },
+                tasks: [], submissions: [], activities: [], activityRecords: []
+            };
+        }
+        let d = appData[username];
+        students = d.students || [];
+        eduStudents = d.eduStudents || [];
+        
+        students.forEach(s => {
+            let fullName = `${s.fname} ${s.lname}`.trim();
+            s.qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(fullName)}`;
+            if (!s.gender) s.gender = 'ไม่ระบุ';
+        });
+        
+        eduStudents.forEach(s => {
+            let fullName = `${s.fname} ${s.lname}`.trim();
+            s.qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(fullName)}`;
+            if (!s.gender) s.gender = 'ไม่ระบุ';
+        });
+
+        records = d.records || [];
+        leaves = d.leaves || [];
+        subjects = d.subjects || ['ชีววิทยาทั่วไป', 'พันธุศาสตร์', 'สรีรวิทยาของพืช', 'อนุกรมวิธานของชันโรง (Tetragonula)'];
+        rooms = d.rooms || ['ชีววิทยา ปี 1 ห้อง 1', 'ชีววิทยา ปี 2 ห้อง 1'];
+        grades = d.grades || {};
+        exams = d.exams || { maxScore: 60, passPercent: 50, published: false, scores: {}, publishedIndividuals: {} };
+        if (!exams.publishedIndividuals) exams.publishedIndividuals = {};
+        if (exams.passPercent === undefined) exams.passPercent = 50; 
+        tasks = d.tasks || [];
+        submissions = d.submissions || [];
+        activities = d.activities || [];
+        activityRecords = d.activityRecords || [];
+
+        // Insert Default Context-Specific Data (if empty)
+        if(tasks.length === 0) {
+            tasks.push({
+                id: Date.now(), title: 'ออกแบบบอร์ดเกม Genetica: ศึกไขรหัสพันธุกรรม', subject: 'พันธุศาสตร์', room: 'ชีววิทยา ปี 1 ห้อง 1', maxScore: 20, type: 'both', startDate: new Date().toISOString().slice(0,16), deadline: new Date(Date.now() + 7*24*60*60*1000).toISOString().slice(0,16), allowLate: true, date: formatJustDate(new Date())
+            });
+            tasks.push({
+                id: Date.now()+1, title: 'ออกแบบระบบรดน้ำอัตโนมัติ (Moss Terrarium)', subject: 'สรีรวิทยาของพืช', room: 'ชีววิทยา ปี 2 ห้อง 1', maxScore: 15, type: 'both', startDate: new Date().toISOString().slice(0,16), deadline: new Date(Date.now() + 7*24*60*60*1000).toISOString().slice(0,16), allowLate: true, date: formatJustDate(new Date())
+            });
+        }
+        if(activities.length === 0) {
+            activities.push({ id: Date.now(), name: 'ค่ายบั้งไฟ ไพศาลเบิกฟ้า', date: '2026-05-23', detail: 'จ.อุบลราชธานี' });
+            activities.push({ id: Date.now()+1, name: 'อบรมเชิงปฏิบัติการวิจัยในชั้นเรียน', date: '2026-03-07', detail: 'ห้องบุษบงกช มหาวิทยาลัยราชภัฏอุบลราชธานี' });
+        }
+
+        let savedAsnPass = localStorage.getItem(`bio_asn_pass_${username}`);
+        if(savedAsnPass) asnPassPercent = parseInt(savedAsnPass);
+        if(document.getElementById('asn-pass-percent')) document.getElementById('asn-pass-percent').value = asnPassPercent;
+    }
+
+    window.onload = async function() {
+        migrateOldData();
+        if(WEB_APP_URL !== "วาง_URL_ที่นี่") await loadFromCloud(false);
+    }
+
+    async function loadFromCloud(showLoading = true) {
+        if(WEB_APP_URL === "วาง_URL_ที่นี่") return;
+        if(showLoading) Swal.fire({ title: 'กำลังโหลดข้อมูลจาก Cloud...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+        try {
+            let res = await fetch(WEB_APP_URL); 
+            let data = await res.json();
+            
+            let localTeachers = JSON.parse(localStorage.getItem('bio_teachers'));
+            let localAppData = JSON.parse(localStorage.getItem('bio_app_data'));
+
+            if (data.teachers && data.teachers.length > 0) {
+                teachers = data.teachers;
+            } else if (localTeachers && localTeachers.length > 0) {
+                teachers = localTeachers;
+            }
+            
+            if (data.appData && Object.keys(data.appData).length > 0) {
+                appData = data.appData;
+            } else if (localAppData && Object.keys(localAppData).length > 0) {
+                appData = localAppData; 
+            } else if (data.students && data.students.length > 0) { 
+                appData['admin'] = {
+                    students: data.students || [], eduStudents: data.eduStudents || [], records: data.records || [], leaves: data.leaves || [],
+                    subjects: data.subjects && data.subjects.length > 0 ? data.subjects : ['ชีววิทยาทั่วไป', 'พันธุศาสตร์', 'สรีรวิทยาของพืช', 'อนุกรมวิธานของชันโรง (Tetragonula)'],
+                    rooms: data.rooms && data.rooms.length > 0 ? data.rooms : ['ชีววิทยา ปี 1 ห้อง 1', 'ชีววิทยา ปี 2 ห้อง 1'],
+                    grades: data.grades || {}, exams: data.exams || { maxScore: 60, passPercent: 50, published: false, scores: {}, publishedIndividuals: {} },
+                    tasks: data.tasks || [], submissions: data.submissions || [], activities: [], activityRecords: []
+                };
+            }
+
+            saveToLocal(); 
+            if (activeTeacherUsername) { loadSessionData(activeTeacherUsername); }
+
+            if(!document.getElementById('teacher-section').classList.contains('hidden')) { updateDropdowns(); renderTeacherData(); }
+            if(currentStudentEmail) { updateDropdowns(); loadStudentDashboard(); renderStudentTasks(); }
+            if(showLoading) Swal.fire('สำเร็จ', 'โหลดข้อมูลเรียบร้อย', 'success');
+        } catch(e) { 
+            if(showLoading) Swal.fire('ข้อมูลคลาวด์ผิดพลาด', 'กำลังโหลดข้อมูลจากในเครื่องแทน...', 'warning'); 
+            if (activeTeacherUsername) { loadSessionData(activeTeacherUsername); }
+            if(!document.getElementById('teacher-section').classList.contains('hidden')) { updateDropdowns(); renderTeacherData(); }
+        }
+    }
+
+    function saveToCloud() {
+        saveToLocal();
+        if(WEB_APP_URL === "วาง_URL_ที่นี่") return;
+        
+        let currentData = appData[activeTeacherUsername || 'admin'] || {};
+        let payload = { 
+            action: "saveAll", 
+            data: { 
+                students: currentData.students || [],
+                eduStudents: currentData.eduStudents || [],
+                records: currentData.records || [],
+                leaves: currentData.leaves || [],
+                subjects: currentData.subjects || [],
+                rooms: currentData.rooms || [],
+                grades: currentData.grades || {},
+                exams: currentData.exams || {},
+                tasks: currentData.tasks || [],
+                submissions: currentData.submissions || [],
+                activities: currentData.activities || [],
+                activityRecords: currentData.activityRecords || [],
+                teachers: teachers, 
+                appData: appData 
+            } 
+        };
+        fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) }).catch(e => console.log("Cloud Error:", e));
+    }
+
+    function saveToLocal() {
+        localStorage.setItem('bio_teachers', JSON.stringify(teachers));
+        if (activeTeacherUsername) {
+            appData[activeTeacherUsername] = {
+                students: students, eduStudents: eduStudents, records: records, leaves: leaves, 
+                subjects: subjects, rooms: rooms, grades: grades, 
+                exams: exams, tasks: tasks, submissions: submissions,
+                activities: activities, activityRecords: activityRecords
+            };
+        }
+        localStorage.setItem('bio_app_data', JSON.stringify(appData));
+    }
+
+    function toggleLoginType() {
+        let role = document.getElementById('login-role').value;
+        document.getElementById('teacher-login').classList.toggle('hidden', role !== 'teacher');
+        document.getElementById('student-login').classList.toggle('hidden', role !== 'student');
+    }
+
+    async function loginTeacher() {
+        let user = document.getElementById('teacher-username').value.trim().toLowerCase();
+        let pass = document.getElementById('teacher-password').value;
+
+        if(user === '' && pass === 'Biology') {
+            user = 'admin';
+        }
+
+        if(!user || !pass) return Swal.fire('แจ้งเตือน', 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน', 'warning');
+
+        await loadFromCloud(true);
+
+        let found = teachers.find(t => t.username.toLowerCase() === user && t.password === pass);
+
+        if(found) {
+            activeTeacherUsername = found.username;
+            loadSessionData(activeTeacherUsername);
+
+            document.getElementById('login-section').classList.add('hidden'); 
+            document.getElementById('teacher-section').classList.remove('hidden');
+            
+            let teacherTitle = document.querySelector('#teacher-section h2');
+            if(teacherTitle) teacherTitle.innerHTML = `👨‍🏫ระบบอาจารย์ผู้สอน ${found.name} 🔬`;
+
+            updateDropdowns(); renderTeacherData(); Swal.fire('สำเร็จ!', `ยินดีต้อนรับ ${found.name}`, 'success');
+            
+            document.getElementById('teacher-username').value = '';
+            document.getElementById('teacher-password').value = '';
+        } else {
+            Swal.fire('ผิดพลาด', 'ชื่อผู้ใช้หรือรหัสผ่านผิด', 'error');
+        }
+    }
+
+    async function registerTeacherUI() {
+        const { value: formValues } = await Swal.fire({
+            title: '📝 สมัครใช้งานระบบอาจารย์',
+            html: `
+                <div style="text-align:left;">
+                    <label style="color:#2980b9;">ชื่อ-นามสกุล อาจารย์:</label>
+                    <input id="reg-name" class="swal2-input" placeholder="เช่น อ.สมชาย ใจดี" style="width:85%;">
+                    <label style="color:#2980b9;">ชื่อผู้ใช้ (Username):</label>
+                    <input id="reg-user" class="swal2-input" placeholder="ใช้ภาษาอังกฤษตัวเล็กหรือตัวเลข" style="width:85%;">
+                    <label style="color:#2980b9;">รหัสผ่าน:</label>
+                    <input type="password" id="reg-pass" class="swal2-input" placeholder="รหัสผ่าน 4 ตัวขึ้นไป" style="width:85%;">
+                </div>
+                <div style="margin-top:15px; padding:10px; background:#e8f8f5; border-left:4px solid #27ae60; text-align:left; font-size:13px; color:#117864;">
+                    <b>หมายเหตุ:</b> ระบบได้รับการออกแบบให้แยกข้อมูล (นักศึกษา, คะแนน, เช็คชื่อ) ของอาจารย์แต่ละท่านออกจากกันอย่างสมบูรณ์ <br>ข้อมูลของอาจารย์ท่านที่ 1 จะไม่แสดงปะปนกับอาจารย์ท่านที่ 2 ครับ
+                </div>
+            `,
+            focusConfirm: false, showCancelButton: true, confirmButtonText: 'สมัครใช้งาน', cancelButtonText: 'ยกเลิก',
+            preConfirm: () => {
+                let name = document.getElementById('reg-name').value.trim();
+                let user = document.getElementById('reg-user').value.trim().toLowerCase();
+                let pass = document.getElementById('reg-pass').value;
+                if(!name || !user || !pass) { Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน'); return false; }
+                if(pass.length < 4) { Swal.showValidationMessage('รหัสผ่านต้องมี 4 ตัวขึ้นไป'); return false; }
+                if(teachers.find(t => t.username.toLowerCase() === user)) { Swal.showValidationMessage('ชื่อผู้ใช้นี้มีคนใช้แล้ว กรุณาเปลี่ยนใหม่'); return false; }
+                return { name, user, pass };
+            }
+        });
+
+        if (formValues) {
+            teachers.push({ username: formValues.user, password: formValues.pass, name: formValues.name });
+            saveToCloud();
+            Swal.fire('สำเร็จ', 'สมัครใช้งานอาจารย์เรียบร้อยแล้ว คุณสามารถเข้าสู่ระบบได้เลย', 'success');
+        }
+    }
+
+    async function loginStudent() {
+        let emailInput = document.getElementById('student-email').value;
+        let passInput = document.getElementById('student-password').value;
+        let email = emailInput ? emailInput.trim().toLowerCase() : '';
+        
+        if(!email) {
+            return Swal.fire('แจ้งเตือน', 'กรุณากรอกอีเมลของนักศึกษา', 'warning');
+        }
+
+        await loadFromCloud(true);
+        appData = JSON.parse(localStorage.getItem('bio_app_data')) || {}; 
+        
+        let foundStudent = null;
+        let foundTeacherUser = null;
+
+        for (let tUser in appData) {
+            if (appData[tUser].students) {
+                let s = appData[tUser].students.find(x => x.email && x.email.trim().toLowerCase() === email);
+                if (s) {
+                    foundStudent = s;
+                    foundTeacherUser = tUser;
+                    break;
+                }
+            }
+        }
+        
+        if(!foundStudent) {
+            return Swal.fire('ไม่สามารถเข้าใช้งานได้', 'อีเมลนี้ไม่มีในระบบ! คุณต้องใช้อีเมลเดียวกับที่ระบุในบัตรประจำตัวนักศึกษาเท่านั้น', 'error');
+        }
+
+        if (!foundStudent.password) {
+            activeTeacherUsername = foundTeacherUser;
+            loadSessionData(activeTeacherUsername);
+
+            const { value: newPass } = await Swal.fire({
+                title: 'ตั้งรหัสผ่านส่วนตัว',
+                text: 'เนื่องจากเป็นการเข้าระบบครั้งแรก กรุณาตั้งรหัสผ่านสำหรับบัญชีของคุณเพื่อความปลอดภัย',
+                input: 'password',
+                inputPlaceholder: 'กรอกรหัสผ่าน 4 ตัวอักษรขึ้นไป...',
+                inputAttributes: { autocapitalize: 'off', autocorrect: 'off' },
+                showCancelButton: true, confirmButtonText: 'บันทึกรหัสผ่าน', cancelButtonText: 'ยกเลิก',
+                inputValidator: (value) => { if (!value || value.length < 4) return 'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร!' }
+            });
+
+            if (newPass) {
+                let sRef = students.find(x => x.email === foundStudent.email);
+                if(sRef) sRef.password = newPass;
+                saveToCloud();
+                document.getElementById('student-password').value = ''; 
+                Swal.fire('สำเร็จ', 'ตั้งรหัสผ่านเรียบร้อยแล้ว กรุณากรอกรหัสผ่านที่คุณเพิ่งตั้งเพื่อเข้าสู่ระบบอีกครั้ง', 'success');
+            }
+            return; 
+        }
+
+        if (!passInput) {
+            return Swal.fire('แจ้งเตือน', 'บัญชีนี้ถูกตั้งรหัสผ่านไว้แล้ว กรุณากรอกรหัสผ่านเพื่อเข้าใช้งาน', 'warning');
+        }
+        if (passInput !== foundStudent.password) {
+            return Swal.fire('ผิดพลาด', 'รหัสผ่านไม่ถูกต้อง! หากลืมรหัสผ่าน กรุณาแจ้งอาจารย์ผู้สอนเพื่อรีเซ็ต', 'error');
+        }
+
+        activeTeacherUsername = foundTeacherUser;
+        loadSessionData(activeTeacherUsername);
+        
+        let sRef = students.find(x => x.email === foundStudent.email);
+        currentStudentEmail = sRef.email; 
+        
+        let teacherInfo = teachers.find(t => t.username === activeTeacherUsername);
+        let tName = teacherInfo ? teacherInfo.name : 'อาจารย์ผู้สอน';
+        document.querySelector('#student-section h2').innerText = `🎓ระบบนักศึกษา สอนโดย ${tName}🌻`;
+        
+        document.getElementById('current-student-name').innerText = `${sRef.fname ? `${sRef.fname}${sRef.lname}` : sRef.name}`;
+        document.getElementById('current-student-details').innerHTML = `
+            <b>เลขที่:</b> ${sRef.number||'-'} | <b>รหัสนักศึกษา:</b> ${sRef.id} <br>
+            <b>ชั้นเรียน:</b> ${sRef.room||'-'} <br>
+            <b>อีเมล:</b> ${sRef.email}
+        `;
+        
+        document.getElementById('current-student-pic').src = sRef.imageBase64 || DEFAULT_AVATAR;
+        document.getElementById('current-student-qr').src = sRef.qrUrl; 
+        
+        document.getElementById('login-section').classList.add('hidden'); document.getElementById('student-section').classList.remove('hidden');
+        
+        document.getElementById('student-email').value = '';
+        document.getElementById('student-password').value = '';
+
+        updateDropdowns(); loadStudentDashboard(); renderStudentTasks();
+    }
+
+    function logout() {
+        stopScanner(); currentStudentEmail = null; activeTeacherUsername = null;
+        document.getElementById('teacher-section').classList.add('hidden'); document.getElementById('student-section').classList.add('hidden');
+        document.getElementById('login-section').classList.remove('hidden');
+    }
+
+    function showTeacherTab(tabId) {
+        stopScanner(); 
+        ['t-students', 't-scan-attendance', 't-scan-assignment', 't-history-att', 't-history-asn', 't-leaves', 't-exams', 't-grades', 't-activities', 't-edu-students'].forEach(id => {
+            let el = document.getElementById(id);
+            if(el) el.classList.add('hidden');
+        });
+        let target = document.getElementById(tabId);
+        if(target) target.classList.remove('hidden');
+        
+        if(tabId === 't-history-att') { updateAttendanceChart(); updateAttendanceGenderChart(); }
+        if(tabId === 't-history-asn') { updateAssignmentChart(); updateAssignmentGenderChart(); }
+        if(tabId === 't-leaves') { renderLeaves(); }
+        if(tabId === 't-exams') { updateExamChart(); updateExamGenderChart(); }
+        if(tabId === 't-grades') { renderGrades(); } 
+        if(tabId === 't-edu-students') updateEduChart();
+        if(tabId === 't-activities') { renderActivityTable(); }
+    }
+
+    function renderRoomTabs() {
+        let hAttContainer = document.getElementById('history-att-room-tabs');
+        if(hAttContainer) {
+            let hHtml = `<button class="btn-${currentHistoryAttRoom==='all'?'primary':'info'}" onclick="setHistoryAttRoom('all')">🏫 ดูทุกห้องรวมกัน</button>`;
+            rooms.forEach(r => {
+                hHtml += `<button class="btn-${currentHistoryAttRoom===r?'primary':'info'}" onclick="setHistoryAttRoom('${r}')">📁 ${r}</button>`;
+            });
+            hAttContainer.innerHTML = hHtml;
+        }
+
+        let hAsnContainer = document.getElementById('history-asn-room-tabs');
+        if(hAsnContainer) {
+            let hHtml = `<button class="btn-${currentHistoryAsnRoom==='all'?'primary':'info'}" onclick="setHistoryAsnRoom('all')">🏫 ดูทุกห้องรวมกัน</button>`;
+            rooms.forEach(r => {
+                hHtml += `<button class="btn-${currentHistoryAsnRoom===r?'primary':'info'}" onclick="setHistoryAsnRoom('${r}')">📁 ${r}</button>`;
+            });
+            hAsnContainer.innerHTML = hHtml;
+        }
+
+        let lContainer = document.getElementById('leave-room-tabs');
+        if(lContainer) {
+            let lHtml = `<button class="btn-${currentLeaveRoom==='all'?'primary':'info'}" onclick="setLeaveRoom('all')">🏫 ดูทุกห้องรวมกัน</button>`;
+            rooms.forEach(r => {
+                lHtml += `<button class="btn-${currentLeaveRoom===r?'primary':'info'}" onclick="setLeaveRoom('${r}')">📁 ${r}</button>`;
+            });
+            lContainer.innerHTML = lHtml;
+        }
+
+        let eContainer = document.getElementById('exam-room-tabs');
+        if(eContainer) {
+            let eHtml = `<button class="btn-${currentExamRoom==='all'?'primary':'info'}" onclick="setExamRoom('all')">🏫 ดูทุกห้องรวมกัน</button>`;
+            rooms.forEach(r => {
+                eHtml += `<button class="btn-${currentExamRoom===r?'primary':'info'}" onclick="setExamRoom('${r}')">📁 ${r}</button>`;
+            });
+            eContainer.innerHTML = eHtml;
+        }
+
+        let gContainer = document.getElementById('grade-room-tabs');
+        if(gContainer) {
+            let gHtml = `<button class="btn-${currentGradeRoom==='all'?'primary':'info'}" onclick="setGradeRoom('all')">🏫 ดูทุกห้องรวมกัน</button>`;
+            rooms.forEach(r => {
+                gHtml += `<button class="btn-${currentGradeRoom===r?'primary':'info'}" onclick="setGradeRoom('${r}')">📁 ${r}</button>`;
+            });
+            gContainer.innerHTML = gHtml;
+        }
+        
+        renderEduYearTabs();
+    }
+    
+    function renderEduYearTabs() {
+        let eduContainer = document.getElementById('edu-year-tabs');
+        if(eduContainer) {
+            let allYears = [...new Set(eduStudents.map(s => s.year || "ไม่ระบุปี"))].sort();
+            let eduHtml = `<button class="btn-${currentEduYear==='all'?'primary':'info'}" onclick="setEduYear('all')">🏫 ดูทุกปีการศึกษารวมกัน</button>`;
+            allYears.forEach(y => {
+                eduHtml += `<button class="btn-${currentEduYear===y?'primary':'info'}" onclick="setEduYear('${y}')">📅 ปีการศึกษา ${y}</button>`;
+            });
+            eduContainer.innerHTML = eduHtml;
+        }
+    }
+
+    function setHistoryAttRoom(room) { currentHistoryAttRoom = room; renderRoomTabs(); renderHistoryTables(); }
+    function setHistoryAsnRoom(room) { currentHistoryAsnRoom = room; renderRoomTabs(); renderHistoryTables(); }
+    function setLeaveRoom(room) { currentLeaveRoom = room; renderRoomTabs(); renderLeaves(); }
+    function setExamRoom(room) { currentExamRoom = room; renderRoomTabs(); renderExams(); }
+    function setGradeRoom(room) { currentGradeRoom = room; renderRoomTabs(); renderGrades(); }
+    function setEduYear(year) { currentEduYear = year; renderEduYearTabs(); renderEduStudents(); }
+
+    function updateDropdowns() {
+        let subHtml = subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+        ['scan-att-subject', 'scan-asn-subject', 's-leave-subject'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = subHtml; });
+        ['filter-subject-att', 'filter-subject-asn', 'leave-filter-subject'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = `<option value="all">ทั้งหมด</option>` + subHtml; });
+
+        let roomHtml = rooms.map(r => `<option value="${r}">${r}</option>`).join('');
+        ['s-room', 'scan-att-room', 'scan-asn-room', 's-leave-room'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = roomHtml; });
+        
+        updateActivityDropdowns();
+        renderRoomTabs();
+    }
+
+    function updateActivityDropdowns() {
+        let actHtml = activities.map(a => `<option value="${a.id}">${a.name} (${formatJustDate(a.date)})</option>`).join('');
+        ['scan-act-select'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = actHtml; });
+        ['filter-act'].forEach(id => { if(document.getElementById(id)) document.getElementById(id).innerHTML = `<option value="all">ทั้งหมด</option>` + actHtml; });
+    }
+
+    function renderTeacherData() { renderStudentList(); renderEduStudents(); renderHistoryTables(); renderLeaves(); renderExams(); renderGrades(); renderTeacherTasks(); renderActivityTable(); }
+
+    function addNewSubject() { Swal.fire({title: 'เพิ่มวิชา', input: 'text', showCancelButton: true}).then(r => { if(r.value){ subjects.push(r.value); saveToCloud(); updateDropdowns(); }}); }
+    
+    function deleteSubject() {
+        if(subjects.length === 0) return Swal.fire('ไม่มีข้อมูล', 'ไม่มีวิชาให้ลบ', 'info');
+        let subjectCheckboxes = subjects.map(s => `<label style="display:block; text-align:left; cursor:pointer; padding:5px; border-bottom:1px solid #eee;"><input type="checkbox" class="bulk-sub-checkbox" value="${s}"> ${s}</label>`).join('');
+        let htmlContent = `<div style="text-align:left;">
+            <label style="cursor:pointer; color:#2980b9; font-weight:bold;">
+                <input type="checkbox" onchange="let cb = document.querySelectorAll('.bulk-sub-checkbox'); for(let i=0; i<cb.length; i++) cb[i].checked = this.checked;"> เลือกทั้งหมด
+            </label>
+            <div style="max-height:200px; overflow-y:auto; border:1px solid #ccc; padding:10px; margin-top:10px; border-radius:5px;">${subjectCheckboxes}</div>
+        </div>`;
+
+        Swal.fire({ 
+            title: 'เลือกวิชาที่ต้องการลบ', 
+            html: htmlContent, 
+            showCancelButton: true,
+            confirmButtonText: 'ลบวิชาที่เลือก',
+            cancelButtonText: 'ยกเลิก',
+            confirmButtonColor: '#e74c3c',
+            preConfirm: () => {
+                let selected = Array.from(document.querySelectorAll('.bulk-sub-checkbox:checked')).map(cb => cb.value);
+                if(selected.length === 0) {
+                    Swal.showValidationMessage('กรุณาเลือกอย่างน้อย 1 วิชา');
+                    return false;
+                }
+                return selected;
+            }
+        }).then(r => {
+            if(r.isConfirmed && r.value) { 
+                subjects = subjects.filter(sub => !r.value.includes(sub)); 
+                saveToCloud(); 
+                updateDropdowns(); 
+                renderTeacherData(); 
+                Swal.fire('สำเร็จ', `ลบวิชา ${r.value.length} รายการเรียบร้อยแล้ว`, 'success'); 
+            }
+        });
+    }
+
+    function addNewRoom() { Swal.fire({title: 'เพิ่มห้องเรียน', input: 'text', showCancelButton: true}).then(r => { if(r.value){ rooms.push(r.value); saveToCloud(); updateDropdowns(); }}); }
+    function deleteRoom() {
+        if(rooms.length === 0) return Swal.fire('ไม่มีข้อมูล', 'ไม่มีห้องเรียนให้ลบ', 'info');
+        let roomCheckboxes = rooms.map(r => `<label style="display:block; text-align:left; cursor:pointer; padding:5px; border-bottom:1px solid #eee;"><input type="checkbox" class="bulk-room-checkbox" value="${r}"> ${r}</label>`).join('');
+        let htmlContent = `<div style="text-align:left;">
+            <label style="cursor:pointer; color:#2980b9; font-weight:bold;">
+                <input type="checkbox" onchange="let cb = document.querySelectorAll('.bulk-room-checkbox'); for(let i=0; i<cb.length; i++) cb[i].checked = this.checked;"> เลือกทั้งหมด
+            </label>
+            <div style="max-height:200px; overflow-y:auto; border:1px solid #ccc; padding:10px; margin-top:10px; border-radius:5px;">${roomCheckboxes}</div>
+        </div>`;
+
+        Swal.fire({ 
+            title: 'เลือกห้องที่ต้องการลบ', 
+            html: htmlContent, 
+            showCancelButton: true,
+            confirmButtonText: 'ลบห้องที่เลือก',
+            cancelButtonText: 'ยกเลิก',
+            confirmButtonColor: '#e74c3c',
+            preConfirm: () => {
+                let selected = Array.from(document.querySelectorAll('.bulk-room-checkbox:checked')).map(cb => cb.value);
+                if(selected.length === 0) {
+                    Swal.showValidationMessage('กรุณาเลือกอย่างน้อย 1 ห้อง');
+                    return false;
+                }
+                return selected;
+            }
+        }).then(r => {
+            if(r.isConfirmed && r.value) { 
+                rooms = rooms.filter(rm => !r.value.includes(rm)); 
+                saveToCloud(); 
+                updateDropdowns(); 
+                renderTeacherData(); 
+                Swal.fire('สำเร็จ', `ลบห้องเรียน ${r.value.length} ห้องเรียบร้อยแล้ว`, 'success'); 
+            }
+        });
+    }
+
+    function addActivity() {
+        let name = document.getElementById('act-name').value.trim();
+        let date = document.getElementById('act-date').value;
+        let detail = document.getElementById('act-detail').value.trim();
+        if(!name || !date) return Swal.fire('เตือน', 'กรุณากรอกชื่อกิจกรรมและวันที่ให้ครบถ้วน', 'warning');
+        
+        activities.push({
+            id: Date.now(), name: name, date: date, detail: detail
+        });
+        saveToCloud();
+        updateActivityDropdowns();
+        Swal.fire('สำเร็จ', 'สร้างรายการกิจกรรมเรียบร้อยแล้ว', 'success');
+        document.getElementById('act-name').value = '';
+        document.getElementById('act-detail').value = '';
+    }
+
+    // แก้ไขให้ระบบลงชื่อ Manual ดึงชื่อจากนักศึกษาทะเบียนหลัก (eduStudents) มาได้ด้วย
+    async function openManualActivityCheck() {
+        let actId = document.getElementById('scan-act-select').value;
+        if(!actId) return Swal.fire("เตือน", "กรุณาเลือกกิจกรรมก่อนบันทึกข้อมูล", "warning");
+        
+        let act = activities.find(a => String(a.id) === String(actId));
+        
+        let allStudents = [...students, ...eduStudents];
+        let stuOptions = allStudents.map(s => {
+            let roomOrYear = s.room ? `ห้อง ${s.room}` : `ครุศาสตร์ ปี ${s.year||'-'}`;
+            return `<option value="${s.id}">${roomOrYear} | เลขที่ ${s.number||'-'} : ${s.fname} ${s.lname}</option>`;
+        }).join('');
+        
+        let htmlContent = `<div style="text-align:left;"><label>เลือกนักศึกษา:</label><select id="m-act-stu" class="swal2-input" style="width:100%;">${stuOptions}</select></div>`;
+        
+        const { value: formValues } = await Swal.fire({ title: '📝 ลงชื่อร่วมกิจกรรมรายบุคคล', html: htmlContent, showCancelButton: true, preConfirm: () => { return document.getElementById('m-act-stu').value; } });
+        if (formValues) {
+            let dup = activityRecords.find(r => r.studentId === formValues && String(r.actId) === String(actId));
+            if(dup) return Swal.fire("เตือน", "นักศึกษาคนนี้มีชื่อในกิจกรรมนี้แล้ว", "warning");
+            activityRecords.push({ id: Date.now(), studentId: formValues, actId: actId, timestamp: getThaiDateTime() });
+            saveToCloud(); renderActivityTable(); Swal.fire("สำเร็จ", "บันทึกเข้าร่วมกิจกรรมเรียบร้อย", "success");
+        }
+    }
+
+    function updateActivityChart() {
+        let canvas = document.getElementById('activityChart');
+        if(!canvas) return;
+
+        let actLabels = [];
+        let actData = [];
+        
+        activities.forEach(a => {
+            actLabels.push(a.name);
+            let count = activityRecords.filter(r => String(r.actId) === String(a.id)).length;
+            actData.push(count);
+        });
+
+        if(activityChartInstance) { activityChartInstance.destroy(); }
+        
+        activityChartInstance = new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: actLabels,
+                datasets: [{
+                    label: 'จำนวนผู้เข้าร่วม (คน)',
+                    data: actData,
+                    backgroundColor: 'rgba(26, 188, 156, 0.8)',
+                    borderColor: 'rgba(22, 160, 133, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { 
+                    y: { beginAtZero: true, ticks: {stepSize:1, font:{family:'Sarabun'}} }, 
+                    x: { ticks: {font:{family:'Sarabun'}} } 
+                }
+            },
+            plugins: [chartDataLabelsPlugin]
+        });
+    }
+
+    function updateActivityGenderChart() {
+        let canvas = document.getElementById('activityGenderChart');
+        if(!canvas) return;
+
+        let totalMale = 0, totalFemale = 0;
+        
+        activityRecords.forEach(r => {
+            // ดึงข้อมูลเพศจากทั้งตารางปกติและตารางครุศาสตร์
+            let stu = students.find(s => s.id === r.studentId) || eduStudents.find(s => s.id === r.studentId);
+            if(stu) {
+                if(stu.gender === 'ชาย') totalMale++;
+                else if(stu.gender === 'หญิง') totalFemale++;
+            }
+        });
+
+        if(activityGenderChartInstance) { activityGenderChartInstance.destroy(); }
+        
+        activityGenderChartInstance = new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: ['นักศึกษาชาย', 'นักศึกษาหญิง'],
+                datasets: [{
+                    label: 'จำนวนการเข้าร่วมอบรมทั้งหมด (ครั้ง)',
+                    data: [totalMale, totalFemale],
+                    backgroundColor: ['rgba(41, 128, 185, 0.8)', 'rgba(192, 57, 43, 0.8)'],
+                    borderColor: ['rgba(41, 128, 185, 1)', 'rgba(192, 57, 43, 1)'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { 
+                    y: { beginAtZero: true, ticks: {stepSize:1, font:{family:'Sarabun'}} }, 
+                    x: { ticks: {font:{family:'Sarabun'}} } 
+                }
+            },
+            plugins: [chartDataLabelsPlugin]
+        });
+    }
+
+    function renderActivityTable() {
+        let filterActId = document.getElementById('filter-act').value;
+        let tbody = document.querySelector('#activity-table tbody');
+        if(!tbody) return;
+        tbody.innerHTML = '';
+        
+        let filtered = activityRecords.slice().reverse();
+        if(filterActId !== 'all') {
+            filtered = filtered.filter(r => String(r.actId) === String(filterActId));
+        }
+        
+        filtered.forEach((r, idx) => {
+            // ค้นหานักศึกษาจากทั้งสองตาราง
+            let stu = students.find(s => s.id === r.studentId) || eduStudents.find(s => s.id === r.studentId) || { number: '-', fname: 'ไม่ทราบชื่อ', lname: '', id: r.studentId };
+            let act = activities.find(a => String(a.id) === String(r.actId)) || { name: 'กิจกรรมที่ถูกลบ', date: '', detail: '' };
+            
+            tbody.innerHTML += `<tr>
+                <td>${stu.number}</td>
+                <td>${stu.id}</td>
+                <td style="text-align:left;">${stu.fname} ${stu.lname}</td>
+                <td>${act.name}</td>
+                <td>${formatJustDate(act.date).replace('วันที่ ', '')}</td>
+                <td>${act.detail}</td>
+                <td>${r.timestamp}</td>
+                <td style="text-align:center;"><button class="btn-danger" style="padding:4px 8px;" onclick="deleteActivityRecord(${r.id})">ลบ</button></td>
+            </tr>`;
+        });
+
+        updateActivityChart();
+        updateActivityGenderChart();
+    }
+function clearAllActivities() {
+        Swal.fire({
+            title: 'ยืนยันการลบประวัติกิจกรรมทั้งหมด?', text: 'ข้อมูลประวัติผู้เข้าร่วมทุกกิจกรรมจะถูกลบทิ้ง', icon: 'warning',
+            showCancelButton: true, confirmButtonText: 'ลบข้อมูล', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#e74c3c'
+        }).then(r => {
+            if (r.isConfirmed) {
+                activityRecords = [];
+                saveToCloud(); renderActivityTable(); 
+                Swal.fire('สำเร็จ', 'ลบประวัติผู้เข้าร่วมกิจกรรมเรียบร้อยแล้ว', 'success');
+            }
+        });
+    }
+
+    async function createNewTaskUI() {
+        let subOptions = subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+        let roomCheckboxes = rooms.map(r => `<label style="display:block; margin-bottom:5px; cursor:pointer;"><input type="checkbox" name="t-room-cb" value="${r}"> ${r}</label>`).join('');
+        
+        const { value: formValues } = await Swal.fire({
+            title: '➕ สร้างภาระงานออนไลน์ใหม่',
+            html: `
+                <div style="text-align:left;">
+                    <label>📝 ชื่องาน:</label>
+                    <input id="t-title" class="swal2-input" placeholder="เช่น รายงานปฏิบัติการที่ 1" style="width: 80%; margin-bottom:10px;">
+                    <label>📚 วิชา:</label>
+                    <select id="t-sub" class="swal2-input" style="width: 80%; margin-bottom:10px;">${subOptions}</select>
+                    
+                    <label>🏫 ห้องเรียนที่ต้องส่ง (เลือกได้หลายห้อง):</label>
+                    <div style="width: 80%; max-height: 120px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; text-align: left; display: inline-block;">
+                        <label style="display:block; margin-bottom:5px; cursor:pointer; color:#2980b9; font-weight:bold;">
+                            <input type="checkbox" onchange="let cbs = document.querySelectorAll('input[name=\\'t-room-cb\\']'); cbs.forEach(cb => cb.checked = this.checked);"> เลือกทั้งหมด
+                        </label>
+                        <hr style="margin:5px 0;">
+                        ${roomCheckboxes}
+                    </div>
+
+                    <label>⭐ คะแนนเต็ม:</label>
+                    <input type="number" id="t-score" class="swal2-input" value="10" style="width: 80%; margin-bottom:10px;">
+                    
+                    <label>⏰ เริ่มให้ส่งงานตั้งแต่ (วันและเวลา):</label>
+                    <input type="datetime-local" id="t-startdate" class="swal2-input" style="width: 80%; margin-bottom:10px;">
+                    <label>⏰ กำหนดส่งงานถึง (วันและเวลา):</label>
+                    <input type="datetime-local" id="t-deadline" class="swal2-input" style="width: 80%; margin-bottom:10px;">
+                    
+                    <label>รูปแบบการส่งงาน:</label>
+                    <select id="t-type" class="swal2-input" style="width: 80%;">
+                        <option value="both">✅ ส่งได้ทั้งไฟล์ (ขนาดใหญ่สูงสุด 50MB) และลิงก์</option>
+                        <option value="file">📄 ส่งเป็นไฟล์ (ขนาดใหญ่สูงสุด 50MB)</option>
+                        <option value="link">🔗 ส่งเป็นลิงก์ (URL)</option>
+                    </select>
+                </div>
+            `,
+            focusConfirm: false, showCancelButton: true, confirmButtonText: 'บันทึก',
+            preConfirm: () => {
+                let t = document.getElementById('t-title').value;
+                if(!t) { Swal.showValidationMessage('กรุณากรอกชื่องาน'); return false; }
+                let selectedRooms = Array.from(document.querySelectorAll('input[name="t-room-cb"]:checked')).map(cb => cb.value);
+                if(selectedRooms.length === 0) { Swal.showValidationMessage('กรุณาเลือกห้องเรียนอย่างน้อย 1 ห้อง'); return false; }
+
+                return {
+                    title: t, subject: document.getElementById('t-sub').value, rooms: selectedRooms,
+                    maxScore: document.getElementById('t-score').value, type: document.getElementById('t-type').value,
+                    startDate: document.getElementById('t-startdate').value, deadline: document.getElementById('t-deadline').value
+                }
+            }
+        });
+
+        if (formValues) {
+            let baseId = Date.now();
+            formValues.rooms.forEach((r, index) => {
+                tasks.push({
+                    id: baseId + index, title: formValues.title, subject: formValues.subject, room: r,
+                    maxScore: formValues.maxScore, type: formValues.type, 
+                    startDate: formValues.startDate, deadline: formValues.deadline, 
+                    allowLate: false,
+                    date: formatJustDate(new Date())
+                });
+            });
+            saveToCloud(); renderTeacherTasks();
+            Swal.fire('สำเร็จ', `สร้างภาระงานให้ ${formValues.rooms.length} ห้องเรียนเรียบร้อยแล้ว`, 'success');
+        }
+    }
+
+    function renderTeacherTasks() {
+        let container = document.getElementById('task-cards-container');
+        if(!container) return;
+        container.innerHTML = '';
+        
+        let now = new Date();
+
+        tasks.slice().reverse().forEach(t => {
+            let subsCount = submissions.filter(s => s.taskId === t.id).length;
+            let icon = t.type === 'link' ? '🔗' : '📄';
+            let startText = t.startDate ? new Date(t.startDate).toLocaleString('th-TH', {dateStyle:'medium', timeStyle:'short'}) : 'ไม่ระบุ';
+            let endText = t.deadline ? new Date(t.deadline).toLocaleString('th-TH', {dateStyle:'medium', timeStyle:'short'}) : 'ไม่ระบุ';
+
+            let endD = t.deadline ? new Date(t.deadline) : null;
+            let isPastDeadline = endD && now > endD;
+
+            let deadlineStatusHtml = '';
+            let lateToggleBtn = '';
+
+            if (isPastDeadline) {
+                deadlineStatusHtml = `<p style="margin:5px 0; font-size:14px; font-weight:bold; color:#e74c3c;">🔴 หมดเวลาในการส่งงานของนักศึกษาแล้ว</p>`;
+                if (t.allowLate) {
+                    lateToggleBtn = `<button class="btn-warning" style="width:100%; margin-top:5px; background:#f39c12; color:#333;" onclick="toggleLateSubmission(${t.id}, false)">🚫 ปิดระบบรับส่งงานล่าช้า</button>`;
+                } else {
+                    lateToggleBtn = `<button class="btn-success" style="width:100%; margin-top:5px;" onclick="toggleLateSubmission(${t.id}, true)">✅ เปิดระบบรับส่งงานล่าช้า</button>`;
+                }
+            }
+
+            container.innerHTML += `
+                <div class="task-card">
+                    <button class="btn-danger" style="position:absolute; top:5px; right:5px; padding:2px 6px; font-size:12px;" onclick="deleteTask(${t.id})">ลบ</button>
+                    <div class="task-icon">${icon}</div>
+                    <h4 style="margin:5px 0; color:#8e44ad;">${t.title}</h4>
+                    <p style="margin:2px 0; font-size:13px; color:#555;">วิชา: ${t.subject} | ห้อง: ${t.room}</p>
+                    <p style="margin:2px 0; font-size:13px; color:#e67e22;">คะแนนเต็ม: ${t.maxScore} | ส่งแล้ว: ${subsCount} คน</p>
+                    <p style="margin:2px 0; font-size:13px; color:#c0392b;">⏰ เวลาเปิดรับ: ${startText} <br> ถึง: ${endText}</p>
+                    ${deadlineStatusHtml}
+                    <button class="btn-info" style="width:100%; margin-top:10px;" onclick="viewTaskSubmissions(${t.id})">🔍 ตรวจภาระงาน</button>
+                    ${lateToggleBtn}
+                </div>
+            `;
+        });
+    }
+
+    function toggleLateSubmission(taskId, status) {
+        let task = tasks.find(t => t.id === taskId);
+        if (task) {
+            task.allowLate = status;
+            saveToCloud();
+            renderTeacherTasks();
+            if (status) Swal.fire('เปิดสำเร็จ', 'นักศึกษาสามารถส่งงานล่าช้าได้แล้ว', 'success');
+            else Swal.fire('ปิดสำเร็จ', 'ไม่อนุญาตให้นักศึกษาส่งงานล่าช้า', 'success');
+        }
+    }
+
+    function deleteTask(taskId) {
+        Swal.fire({ title: 'ยืนยันการลบ?', text: "ข้อมูลการส่งงานของนักศึกษาในหัวข้อนี้จะถูกลบด้วย", icon: 'warning', showCancelButton: true, confirmButtonColor: '#e74c3c' }).then((r) => {
+            if(r.isConfirmed) {
+                tasks = tasks.filter(t => t.id !== taskId);
+                submissions = submissions.filter(s => s.taskId !== taskId);
+                saveToCloud(); renderTeacherTasks();
+            }
+        });
+    }
+
+    function viewTaskSubmissions(taskId) {
+        let task = tasks.find(t => t.id === taskId);
+        if(!task) return;
+        let stuInRoom = students.filter(s => s.room === task.room).sort((a,b) => (parseInt(a.number)||999) - (parseInt(b.number)||999));
+        
+        let html = `<table style="width:100%; text-align:left; font-size:14px; margin-top:10px;">
+            <tr style="background:#8e44ad; color:white;"><th>เลขที่</th><th>ชื่อ-สกุล</th><th>ชิ้นงาน</th><th>ให้คะแนน (เต็ม ${task.maxScore})</th></tr>`;
+        
+        stuInRoom.forEach(stu => {
+            let sub = submissions.find(s => s.taskId === taskId && s.email === stu.email);
+            let workHtml = `<span style="color:#e74c3c;">ยังไม่ส่ง</span>`;
+            let scoreInput = `<input type="number" id="grade-${taskId}-${stu.email}" placeholder="${task.maxScore}" style="width:60px;" disabled>`;
+            let saveBtn = `<button class="btn-info" disabled style="padding:4px; font-size:12px; background:#bdc3c7;">บันทึก</button>`;
+
+            if(sub) {
+                let lateBadge = sub.isLate ? `<br><span style="color:#e74c3c; font-size:12px; font-weight:bold;">⚠️ ส่งงานล่าช้า</span>` : '';
+                let submitTime = `<br><span style="font-size:11px; color:#2980b9; font-weight:bold;">ส่งงาน ${sub.timestamp}</span>`;
+                
+                if (sub.content.startsWith('http')) {
+                    workHtml = `<a href="${sub.content}" target="_blank" class="btn-primary" style="padding:4px 8px; font-size:12px; text-decoration:none; display:inline-block; border-radius:5px;">🔍 ตรวจ (ลิงก์)</a>${lateBadge}${submitTime}`;
+                } else {
+                    workHtml = `<a href="${sub.content}" download="${sub.filename}" class="btn-primary" style="padding:4px 8px; font-size:12px; text-decoration:none; display:inline-block; border-radius:5px;">🔍 ตรวจ (ไฟล์)</a>${lateBadge}${submitTime}`;
+                }
+                
+                let curScore = sub.isGraded ? (sub.score || 0) : '';
+                scoreInput = `<input type="number" id="grade-${taskId}-${stu.email}" value="${curScore}" style="width:60px;">`;
+                saveBtn = `<button class="btn-success" style="padding:4px 8px; font-size:12px;" onclick="gradeSubmission(${taskId}, '${stu.email}', ${task.maxScore})">บันทึก</button>`;
+            }
+
+            html += `<tr><td style="text-align:center;">${stu.number||'-'}</td><td>${stu.fname} ${stu.lname}</td><td style="text-align:center;">${workHtml}</td><td style="text-align:center; display:flex; gap:5px; align-items:center;">${scoreInput} ${saveBtn}</td></tr>`;
+        });
+        html += `</table>`;
+        
+        html += `<div style="text-align:right; margin-top:15px; padding-top:10px; border-top:1px solid #ddd;">
+                <button class="btn-success" style="padding:10px 20px; font-size:16px;" onclick="saveAllTaskGrades(${taskId})">💾 บันทึกคะแนนทั้งหมด</button>
+            </div>`;
+
+        Swal.fire({ title: `📋 ตรวจงาน: ${task.title}`, html: html, width: 700, showCloseButton: true, showConfirmButton: false });
+    }
+
+    function gradeSubmission(taskId, email, maxScore) {
+        let task = tasks.find(t => t.id === taskId);
+        let stu = students.find(s => s.email === email);
+        let sub = submissions.find(s => s.taskId === taskId && s.email === email);
+        let scoreInput = document.getElementById(`grade-${taskId}-${email}`).value;
+        let score = parseInt(scoreInput || 0);
+
+        if(score > parseInt(maxScore)) return Swal.showValidationMessage('คะแนนเกินที่กำหนด');
+
+        sub.isGraded = true; sub.score = score;
+        let detailName = `[Online] ${task.title}`;
+        let dup = records.find(r => r.id === stu.id && r.type === 'assignment' && r.detail === detailName);
+        if(dup) {
+            dup.score = score; dup.maxScore = task.maxScore; dup.timestamp = getThaiDateTime();
+            dup.isLate = sub.isLate; 
+        } else {
+            records.push({ 
+                id: stu.id, name: `${stu.fname} ${stu.lname}`, email: stu.email, 
+                room: task.room, type: 'assignment', subject: task.subject, 
+                date: new Date().toISOString().split('T')[0], detail: detailName, 
+                score: score, maxScore: task.maxScore, attStatus: null, timestamp: getThaiDateTime(),
+                isLate: sub.isLate 
+            });
+        }
+        
+        saveToCloud(); renderTeacherTasks(); renderHistoryTables(); renderGrades();
+        Swal.fire({title:'บันทึกคะแนนแล้ว', icon:'success', timer:1000, showConfirmButton:false});
+    }
+
+    function saveAllTaskGrades(taskId) {
+        let task = tasks.find(t => t.id === taskId);
+        let stuInRoom = students.filter(s => s.room === task.room);
+        let updatedCount = 0;
+        
+        stuInRoom.forEach(stu => {
+            let inputEle = document.getElementById(`grade-${taskId}-${stu.email}`);
+            if(inputEle && !inputEle.disabled) { 
+                let scoreInput = inputEle.value;
+                if(scoreInput !== '') {
+                    let score = parseInt(scoreInput || 0);
+                    if(score <= parseInt(task.maxScore)) {
+                        let sub = submissions.find(s => s.taskId === taskId && s.email === stu.email);
+                        if(sub) {
+                            sub.isGraded = true; sub.score = score;
+                            let detailName = `[Online] ${task.title}`;
+                            let dup = records.find(r => r.id === stu.id && r.type === 'assignment' && r.detail === detailName);
+                            if(dup) { 
+                                dup.score = score; dup.maxScore = task.maxScore; dup.timestamp = getThaiDateTime(); 
+                                dup.isLate = sub.isLate;
+                            } 
+                            else { 
+                                records.push({ id: stu.id, name: `${stu.fname} ${stu.lname}`, email: stu.email, room: task.room, type: 'assignment', subject: task.subject, date: new Date().toISOString().split('T')[0], detail: detailName, score: score, maxScore: task.maxScore, attStatus: null, timestamp: getThaiDateTime(), isLate: sub.isLate }); 
+                            }
+                            updatedCount++;
+                        }
+                    }
+                }
+            }
+        });
+        
+        saveToCloud(); renderTeacherTasks(); renderHistoryTables(); renderGrades();
+        Swal.fire({title:'บันทึกคะแนนทั้งหมดแล้ว', text:`อัปเดต ${updatedCount} รายการ`, icon:'success', timer:1500, showConfirmButton:false});
+    }
+
+    function renderStudentTasks() {
+        let container = document.getElementById('student-task-list');
+        if(!container) return; container.innerHTML = '';
+        let myRoom = students.find(s => s.email === currentStudentEmail)?.room;
+        let myTasks = tasks.filter(t => t.room === myRoom);
+
+        if(myTasks.length === 0) {
+            container.innerHTML = `<p style="text-align:center; color:#7f8c8d;">🎉 ยังไม่มีภาระงานที่ต้องส่งในขณะนี้</p>`; return;
+        }
+
+        let now = new Date();
+
+        myTasks.slice().reverse().forEach(t => {
+            let sub = submissions.find(s => s.taskId === t.id && s.email === currentStudentEmail);
+            let statusHtml = `<span style="color:#e74c3c; font-weight:bold;">❌ ยังไม่ส่งงาน</span>`;
+            let actionHtml = '';
+            
+            let startD = t.startDate ? new Date(t.startDate) : null;
+            let endD = t.deadline ? new Date(t.deadline) : null;
+            
+            let isPastDeadline = endD && now > endD;
+            let isBeforeStart = startD && now < startD;
+
+            let startText = startD ? startD.toLocaleString('th-TH', {dateStyle:'medium', timeStyle:'short'}) : 'ไม่ระบุ';
+            let endText = endD ? endD.toLocaleString('th-TH', {dateStyle:'medium', timeStyle:'short'}) : 'ไม่ระบุ';
+
+            if(sub) {
+                let lateText = sub.isLate ? ' <br><span style="color:#e74c3c; font-weight:bold;">(⚠️ ส่งงานล่าช้า)</span>' : '';
+                statusHtml = `<span style="color:#2980b9; font-weight:bold;">✅ ส่งแล้วรอตรวจ (ส่งเมื่อ ${sub.timestamp})</span>${lateText}`;
+                
+                if(sub.isGraded) {
+                    statusHtml = `
+                        <span style="color:#27ae60; font-weight:bold;">✅ อาจารย์ผู้สอนตรวจงานแล้ว (ส่งเมื่อ ${sub.timestamp})</span>${lateText}<br>
+                        <span style="color:#d35400;">ได้คะแนน: <b>${sub.score} / ${t.maxScore}</b></span>
+                    `;
+                    actionHtml = `<span style="color:#27ae60; font-size:13px;">📌 ไม่สามารถแก้ไขได้ (ตรวจแล้ว)</span>`;
+                } else if (isPastDeadline && !t.allowLate) {
+                    actionHtml = `<span style="color:#c0392b; font-size:13px;">⏰ ไม่สามารถแก้ไขได้ (หมดเวลา)</span>`;
+                } else {
+                    actionHtml = `<button class="btn-warning" onclick="studentSubmitUI(${t.id}, '${t.type}')" style="margin-top:10px;">แก้ไขการส่งงาน</button>`;
+                }
+            } else {
+                if (isPastDeadline) {
+                    if (t.allowLate) {
+                        actionHtml = `<button class="btn-danger" onclick="studentSubmitUI(${t.id}, '${t.type}')" style="margin-top:10px;">📤 ส่งงานล่าช้า</button>`;
+                    } else {
+                        actionHtml = `<span style="color:#c0392b; font-weight:bold;">⏰ หมดเวลาส่งงาน</span>`;
+                    }
+                } else if (isBeforeStart) {
+                    actionHtml = `<span style="color:#f39c12; font-weight:bold;">⏳ ยังไม่ถึงเวลาเปิดให้ส่ง</span>`;
+                } else {
+                    actionHtml = `<button class="btn-primary" onclick="studentSubmitUI(${t.id}, '${t.type}')" style="margin-top:10px;">📤 ส่งงานนี้</button>`;
+                }
+            }
+
+            container.innerHTML += `
+                <div style="background:white; border:1px solid #ddd; padding:15px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h4 style="margin:0 0 5px 0; color:#8e44ad;">${t.title}</h4>
+                        <p style="margin:0; font-size:13px; color:#555;">วิชา: ${t.subject} | คะแนนเต็ม: ${t.maxScore}</p>
+                        <p style="margin:2px 0 5px 0; font-size:13px; color:#c0392b;">⏰ กำหนดส่ง: ${startText} ถึง ${endText}</p>
+                        <p style="margin:5px 0 0 0;">สถานะ: ${statusHtml}</p>
+                    </div>
+                    <div style="text-align:right;">${actionHtml}</div>
+                </div>
+            `;
+        });
+    }
+
+    async function studentSubmitUI(taskId, type) {
+        let task = tasks.find(t => t.id === taskId);
+        let html = `<div style="text-align:left;">`;
+        
+        if(type === 'file' || type === 'both') {
+            html += `
+                <label style="color:#2980b9; font-weight:bold;">📄 อัปโหลดไฟล์ (PDF, Word, Excel, รูปภาพ):</label>
+                <p style="font-size:12px; color:#e74c3c; margin:2px 0 8px 0;">* รองรับขนาดไฟล์ใหญ่ (สูงสุด 50MB)</p>
+                <input type="file" id="stu-file" accept=".pdf,.doc,.docx,.xls,.xlsx,image/jpeg,image/png,image/jpg" class="swal2-input" style="width:80%; margin-bottom:15px;">
+            `;
+        }
+        if(type === 'link' || type === 'both') {
+            html += `
+                <label style="color:#d35400; font-weight:bold;">🔗 อัปโหลดด้วยลิงก์ (URL):</label>
+                <p style="font-size:12px; color:#7f8c8d; margin:2px 0 8px 0;">* วางลิงก์ Google Drive, YouTube หรือเว็บไซต์อื่นๆ</p>
+                <input type="url" id="stu-link" placeholder="https://..." class="swal2-input" style="width:80%;">
+            `;
+        }
+        html += `</div>`;
+
+        const { value: result } = await Swal.fire({
+            title: `ส่งงาน: ${task.title}`, html: html, showCancelButton: true, confirmButtonText: 'ส่งงาน', cancelButtonText: 'ยกเลิก',
+            preConfirm: () => {
+                let fileInput = document.getElementById('stu-file'); let linkInput = document.getElementById('stu-link');
+                let file = fileInput ? fileInput.files[0] : null; let link = linkInput ? linkInput.value : '';
+                if(!file && !link) { Swal.showValidationMessage('กรุณาเลือกไฟล์รูปภาพ/เอกสาร หรือวางลิงก์ URL อย่างใดอย่างหนึ่ง'); return false; }
+                if(file && file.size > 50 * 1024 * 1024) { Swal.showValidationMessage('ขนาดไฟล์ใหญ่เกิน 50MB กรุณาลดขนาดไฟล์'); return false; }
+                return { file, link };
+            }
+        });
+
+        if (result) {
+            Swal.fire({ title: 'กำลังอัปโหลด...', text: 'อาจใช้เวลาสักครู่หากไฟล์มีขนาดใหญ่', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+            submissions = submissions.filter(s => !(s.taskId === taskId && s.email === currentStudentEmail));
+            
+            let timestamp = getThaiDateTime();
+
+            let now = new Date();
+            let endD = task.deadline ? new Date(task.deadline) : null;
+            let isLateSub = endD && now > endD;
+
+            if (result.file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    submissions.push({ id: Date.now(), taskId: taskId, email: currentStudentEmail, content: e.target.result, filename: result.file.name, timestamp: timestamp, isGraded: false, isLate: isLateSub });
+                    saveToCloud(); renderStudentTasks(); loadStudentDashboard(); Swal.fire('สำเร็จ', 'ส่งไฟล์งานเรียบร้อยแล้ว', 'success');
+                }; reader.readAsDataURL(result.file);
+            } else if (result.link) {
+                submissions.push({ id: Date.now(), taskId: taskId, email: currentStudentEmail, content: result.link, filename: 'Link', timestamp: timestamp, isGraded: false, isLate: isLateSub });
+                saveToCloud(); renderStudentTasks(); loadStudentDashboard(); Swal.fire('สำเร็จ', 'ส่งลิงก์งานเรียบร้อยแล้ว', 'success');
+            }
+        }
+    }
+    
+    function showStudentTab(tabId) { 
+        ['s-dashboard', 's-assignments', 's-leave'].forEach(id => document.getElementById(id).classList.add('hidden')); 
+        document.getElementById(tabId).classList.remove('hidden'); 
+    }
+
+    function compressImage(file, callback) {
+        let reader = new FileReader(); reader.onload = e => {
+            let img = new Image(); img.onload = () => {
+                let canvas = document.createElement('canvas'), MAX = 200, w = img.width, h = img.height;
+                if(w>h) { if(w>MAX){ h*=MAX/w; w=MAX; } } else { if(h>MAX){ w*=MAX/h; h=MAX; } }
+                canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0, 0, w, h); callback(canvas.toDataURL('image/jpeg', 0.7));
+            }; img.src = e.target.result;
+        }; reader.readAsDataURL(file);
+    }
+
+    // =====================================================================
+    // ================= การจัดการฮาร์ดแวร์สแกนเนอร์ (USB / Bluetooth) =====
+    // =====================================================================
+
+    function handleUSBScanner(event, type) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); 
+            let inputElement = event.target;
+            let scannedData = inputElement.value.trim();
+            inputElement.value = ''; 
+            
+            if(scannedData) {
+                onUsbScanSuccess(scannedData, type);
+            }
+        }
+    }
+
+    function onUsbScanSuccess(decodedText, type) {
+        let scannedData = decodedText.trim();
+        
+        // ค้นหานักศึกษาจากทั้งสองตารางรวมกัน
+        let allStudents = [...students, ...eduStudents];
+        let student = allStudents.find(s => `${s.fname} ${s.lname}`.trim() === scannedData) || 
+                      allStudents.find(s => s.id === scannedData) || 
+                      allStudents.find(s => scannedData.includes(s.id)); 
+        
+        if(!student) { 
+            return Swal.fire("ผิดพลาด", "ไม่พบข้อมูลที่ตรงกับระบบ: " + scannedData, "error").then(() => {
+                let elId = type === 'attendance' ? 'usb-scanner-att' : type === 'activity' ? 'usb-scanner-act' : 'usb-scanner-asn';
+                if(document.getElementById(elId)) document.getElementById(elId).focus();
+            }); 
+        }
+
+        if (type === 'activity') {
+            let actId = document.getElementById('scan-act-select').value;
+            if(!actId) return Swal.fire("เตือน", "กรุณาเลือกกิจกรรมก่อนบันทึกข้อมูล", "warning");
+
+            let dup = activityRecords.find(r => r.studentId === student.id && String(r.actId) === String(actId));
+            if(dup) return Swal.fire("เตือน", "นักศึกษาคนนี้สแกนเข้าร่วมกิจกรรมไปแล้ว!", "warning").then(() => {
+                if(document.getElementById('usb-scanner-act')) document.getElementById('usb-scanner-act').focus();
+            });
+
+            activityRecords.push({ id: Date.now(), studentId: student.id, actId: actId, timestamp: getThaiDateTime() });
+            saveToCloud(); renderActivityTable();
+            return Swal.fire({ title: 'บันทึกเข้าร่วมกิจกรรมสำเร็จ!', text: `${student.fname} ${student.lname}`, icon: 'success', timer: 1000, showConfirmButton: false }).then(() => {
+                if(document.getElementById('usb-scanner-act')) document.getElementById('usb-scanner-act').focus();
+            });
+        }
+        
+        // สำหรับการเช็คชื่อ/ส่งงาน ต้องระบุรายวิชาและห้อง
+        let subject = document.getElementById(type === 'attendance' ? 'scan-att-subject' : 'scan-asn-subject').value;
+        let room = document.getElementById(type === 'attendance' ? 'scan-att-room' : 'scan-asn-room').value;
+        let detailId = type === 'attendance' ? 'scan-att-detail' : 'scan-asn-detail'; 
+        
+        if(!document.getElementById(detailId).value) {
+            return Swal.fire("เตือน", "กรุณาระบุรายละเอียดงาน/คาบเรียนก่อนสแกน", "warning"); 
+        }
+        
+        // เช็คว่านักศึกษาอยู่ในห้องที่อาจารย์เลือกหรือไม่
+        if (student.room !== room) { 
+            return Swal.fire({ 
+                title: "ผิดพลาด!", 
+                html: `นักศึกษา <b>${student.fname}</b> อยู่ห้อง <b>${student.room || 'ไม่มีข้อมูลห้อง (อาจเป็น นศ.ทะเบียนหลัก)'}</b><br><br><b>ไม่สามารถสแกนเข้าห้อง ${room} ได้</b>`, 
+                icon: "warning" 
+            }).then(() => {
+                let elId = type === 'attendance' ? 'usb-scanner-att' : 'usb-scanner-asn';
+                if(document.getElementById(elId)) document.getElementById(elId).focus();
+            }); 
+        }
+        
+        let date = document.getElementById(type === 'attendance' ? 'scan-att-date' : 'scan-asn-date').value || new Date().toISOString().split('T')[0];
+        let detail = document.getElementById(detailId).value;
+        let dup = records.find(r => r.id===student.id && r.subject===subject && r.date===date && r.detail===detail && r.type===type);
+        
+        if(dup) {
+            return Swal.fire("เตือน", "บันทึกข้อมูลไปแล้ว!", "warning").then(() => {
+                let elId = type === 'attendance' ? 'usb-scanner-att' : 'usb-scanner-asn';
+                if(document.getElementById(elId)) document.getElementById(elId).focus();
+            });
+        }
+        
+        let score = type === 'assignment' ? (document.getElementById('scan-asn-score').value || 0) : null;
+        let attStatus = type === 'attendance' ? document.getElementById('scan-att-status').value : null;
+        let maxScore = null;
+
+        if(type === 'assignment') {
+            let t = tasks.find(tk => tk.title === detail.replace('[Online] ', ''));
+            let defaultMax = document.getElementById('scan-asn-max-score') ? document.getElementById('scan-asn-max-score').value : 10;
+            maxScore = t ? t.maxScore : (document.getElementById('scan-asn-score').placeholder.replace(/\D/g,'') || defaultMax || 10);
+            records.push({ id: student.id, name: `${student.fname} ${student.lname}`, email: student.email, room, type, subject, date, detail, score, maxScore, attStatus, timestamp: getThaiDateTime(), isLate: false });
+        } else {
+            records.push({ id: student.id, name: `${student.fname} ${student.lname}`, email: student.email, room, type, subject, date, detail, score, attStatus, timestamp: getThaiDateTime() });
+        }
+
+        saveToCloud(); renderHistoryTables(); renderGrades();
+        Swal.fire({ title: 'บันทึกสำเร็จ!', text: `${student.fname} ${student.lname}`, icon: 'success', timer: 1000, showConfirmButton: false }).then(() => {
+            let elId = type === 'attendance' ? 'usb-scanner-att' : 'usb-scanner-asn';
+            if(document.getElementById(elId)) document.getElementById(elId).focus();
+        });
+    }
+
+    function startScanner(type) { 
+        activeScannerType = type; 
+        
+        if (type === 'activity') {
+            if(!document.getElementById('scan-act-select').value) return Swal.fire("เตือน", "กรุณาเลือกกิจกรรมก่อนเปิดกล้อง", "warning"); 
+        } else {
+            let detailId = type === 'attendance' ? 'scan-att-detail' : 'scan-asn-detail'; 
+            if(!document.getElementById(detailId).value) return Swal.fire("เตือน", "กรุณาระบุรายละเอียดงาน/คาบเรียนก่อนเปิดกล้อง", "warning"); 
+        }
+
+        if(!html5QrcodeScanner) { 
+            let rId = type === 'attendance' ? 'reader-att' : type === 'activity' ? 'reader-act' : 'reader-asn';
+            html5QrcodeScanner = new Html5QrcodeScanner(rId, { fps: 10, qrbox: {width: 250, height: 250} }, false); 
+            html5QrcodeScanner.render(onScanSuccess, ()=>{} ); 
+        } 
+    }
+
+    function stopScanner() { 
+        if(html5QrcodeScanner) { 
+            html5QrcodeScanner.clear(); 
+            html5QrcodeScanner = null; 
+        } 
+    }
+    
+    function onScanSuccess(decodedText) {
+        let scannedData = decodedText.trim();
+        
+        // ค้นหานักศึกษาจากทั้งสองตารางรวมกัน สำหรับการสแกนด้วยกล้อง
+        let allStudents = [...students, ...eduStudents];
+        let student = allStudents.find(s => `${s.fname} ${s.lname}`.trim() === scannedData) || 
+                      allStudents.find(s => s.id === scannedData) || 
+                      allStudents.find(s => scannedData.includes(s.id)); 
+        
+        if(!student) { 
+            stopScanner(); 
+            return Swal.fire("ผิดพลาด", "ไม่พบข้อมูลที่ตรงกับระบบ: " + scannedData, "error").then(()=>startScanner(activeScannerType)); 
+        }
+        
+        let type = activeScannerType;
+
+        if (type === 'activity') {
+            let actId = document.getElementById('scan-act-select').value;
+            let dup = activityRecords.find(r => r.studentId === student.id && String(r.actId) === String(actId));
+            stopScanner();
+            if(dup) return Swal.fire("เตือน", "นักศึกษาคนนี้สแกนเข้าร่วมกิจกรรมไปแล้ว!", "warning").then(()=>startScanner(activeScannerType));
+
+            activityRecords.push({ id: Date.now(), studentId: student.id, actId: actId, timestamp: getThaiDateTime() });
+            saveToCloud(); renderActivityTable();
+            return Swal.fire({ title: 'บันทึกเข้าร่วมกิจกรรมสำเร็จ!', text: `${student.fname} ${student.lname}`, icon: 'success', timer: 1000, showConfirmButton: false }).then(()=>startScanner(activeScannerType));
+        }
+
+        let subject = document.getElementById(type === 'attendance' ? 'scan-att-subject' : 'scan-asn-subject').value;
+        let room = document.getElementById(type === 'attendance' ? 'scan-att-room' : 'scan-asn-room').value;
+        
+        if (student.room !== room) { 
+            stopScanner(); 
+            return Swal.fire({ 
+                title: "ผิดพลาด!", 
+                html: `นักศึกษา <b>${student.fname}</b> อยู่ห้อง <b>${student.room || 'ไม่มีข้อมูลห้อง'}</b><br><br><b>ไม่สามารถสแกนเข้าห้อง ${room} ได้</b>`, 
+                icon: "warning" 
+            }).then(() => startScanner(activeScannerType)); 
+        }
+        
+        let date = document.getElementById(type === 'attendance' ? 'scan-att-date' : 'scan-asn-date').value || new Date().toISOString().split('T')[0];
+        let detail = document.getElementById(type === 'attendance' ? 'scan-att-detail' : 'scan-asn-detail').value;
+        let dup = records.find(r => r.id===student.id && r.subject===subject && r.date===date && r.detail===detail && r.type===type);
+        
+        stopScanner(); 
+        if(dup) return Swal.fire("เตือน", "บันทึกข้อมูลไปแล้ว!", "warning").then(()=>startScanner(activeScannerType));
+        
+        let score = type === 'assignment' ? (document.getElementById('scan-asn-score').value || 0) : null;
+        let attStatus = type === 'attendance' ? document.getElementById('scan-att-status').value : null;
+        
+        if(type === 'assignment') {
+            let t = tasks.find(tk => tk.title === detail.replace('[Online] ', ''));
+            let defaultMax = document.getElementById('scan-asn-max-score') ? document.getElementById('scan-asn-max-score').value : 10;
+            let maxScore = t ? t.maxScore : (document.getElementById('scan-asn-score').placeholder.replace(/\D/g,'') || defaultMax || 10);
+            records.push({ id: student.id, name: `${student.fname} ${student.lname}`, email: student.email, room, type, subject, date, detail, score, maxScore, attStatus, timestamp: getThaiDateTime(), isLate: false });
+        } else {
+            records.push({ id: student.id, name: `${student.fname} ${student.lname}`, email: student.email, room, type, subject, date, detail, score, attStatus, timestamp: getThaiDateTime() });
+        }
+
+        saveToCloud(); renderHistoryTables(); renderGrades();
+        Swal.fire({ title: 'บันทึกสำเร็จ!', text: `${student.fname} ${student.lname}`, icon: 'success', timer: 1000, showConfirmButton: false }).then(()=>startScanner(activeScannerType));
+    }
+
+</script>
+
+</body>
+</html>
